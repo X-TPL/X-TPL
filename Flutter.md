@@ -24,5 +24,5 @@ Case C: No pubspec.yaml
 Sequence:
 git clone <repo>
 cd <repo>
-flutter pub get
-flutter build apk --debug
+fvm flutter pub get
+fvm flutter build apk --debug
