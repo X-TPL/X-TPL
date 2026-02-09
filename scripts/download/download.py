@@ -88,11 +88,11 @@ for repository in repositories[:10]:  # testing
     with open(file_path, "wb") as f:
         f.write(response.content)
 
-for file in os.listdir("~/storage/assets"):
-    file_path = Path(f"~/storage/assets/{file}")
+for file in os.listdir("/home/ubuntu/storage/assets"):
+    file_path = Path(f"/home/ubuntu/storage/assets/{file}")
     if Path.is_file(file_path):
         with ZipFile(file_path, 'r') as zObject:
-            zObject.extractall(path='~/storage/assets/extracted')
+            zObject.extractall(path='/home/ubuntu/storage/assets/extracted')
 
 patterns = ["pubspec.yaml", "/android", "lib/main.dart"]
 FLUTTER_RE = re.compile(
@@ -119,8 +119,8 @@ DART_TO_FLUTTER = [
 ]
 buildable = True
 unbuildable_counter = 0
-for folder in os.listdir("~/storage/assets/extracted/"):
-    folder_path = Path(f"~/storage/assets/extracted/{folder}")
+for folder in os.listdir("/home/ubuntu/storage/assets/extracted/"):
+    folder_path = Path(f"/home/ubuntu/storage/assets/extracted/{folder}")
     for pattern in patterns:
         if not folder_path.rglob(pattern):
             buildable = False
