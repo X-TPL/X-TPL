@@ -3,7 +3,7 @@ FROM ubuntu:22.04
 
 # ---------- build args ----------
 ARG FLUTTER_VERSION
-ARG ANDROID_SDK_VERSION=11076708   # cmdline-tools revision
+ARG ANDROID_SDK_VERSION=11076708   ## cmdline-tools revision
 ARG DEBIAN_FRONTEND=noninteractive
 
 # ---------- env ----------
@@ -36,10 +36,10 @@ RUN curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-$
     && rm /tmp/cmdline-tools.zip
 
 # ---------- accept licenses ----------
-RUN yes | sdkmanager --licenses
+RUN yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 
 # ---------- install android packages ----------
-RUN sdkmanager \
+RUN $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
     "platform-tools" \
     "platforms;android-34" \
     "build-tools;34.0.0"

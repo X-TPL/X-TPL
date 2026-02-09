@@ -2,5 +2,4 @@ venv
 .idea
 */assets
 .env
-.fvm
-.fvmrc
+build_manifest.yaml

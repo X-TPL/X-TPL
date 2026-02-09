@@ -2,6 +2,7 @@ import subprocess
 import yaml
 import pathlib
 import threading
+import os
 from concurrent.futures import ThreadPoolExecutor
 
 ROOT = pathlib.Path(__file__).parent.resolve()
@@ -107,5 +108,4 @@ def main():
 
 
 if __name__ == "__main__":
-    import os
     main()
