@@ -80,7 +80,7 @@ def build_app(app):
 
     build_cmd = (
         "flutter pub get && "
-        f"flutter build {output_type} --release --no-daemon 2>&1 | tee /out/{app['id']}.log"
+        f"flutter build {output_type} --release 2>&1 | tee /out/{app['id']}.log"
     )
     with log_path.open("w") as f:
         run([
