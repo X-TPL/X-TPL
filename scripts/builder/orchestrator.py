@@ -70,6 +70,7 @@ def build_app(app):
     app_id = app["id"]
     flutter_version = app["flutter"]
     app_path = ROOT / app["path"]
+    log_path = OUTPUT_DIR / f"{app['id']}.log"
     output_type = app.get("output", "apk")
 
     ensure_image(flutter_version)
@@ -79,18 +80,18 @@ def build_app(app):
 
     build_cmd = (
         "flutter pub get && "
-        f"flutter build {output_type} --release"
+        f"flutter build {output_type} --release 2>&1 | tee /out/{app['id']}.log"
     )
-
-    run([
-        "docker", "run", "--rm",
-        "-v", f"{app_path}:/app",
-        "-v", f"{out_dir}:/out",
-        "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
-        "-v", f"{pathlib.Path.home()}/.gradle:/root/.gradle",
-        image_tag(flutter_version),
-        "bash", "-c", build_cmd,
-    ])
+    with log_path.open("w") as f:
+        run([
+            "docker", "run", "--rm",
+            "-v", f"{app_path}:/app",
+            "-v", f"{out_dir}:/out",
+            "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
+            "-v", f"{pathlib.Path.home()}/.gradle:/root/.gradle",
+            image_tag(flutter_version),
+            "bash", "-c", build_cmd,
+        ], check=True)
 
     print(f"[done] {app_id}")
 
