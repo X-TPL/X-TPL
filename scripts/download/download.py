@@ -82,9 +82,10 @@ apps = []
 repositories = g.search_repositories(query='language:dart app')
 
 for repository in repositories[:10]:  # testing
+    file_path = os.path.expanduser(f"~/storage/assets/{repository.full_name.replace('/', '-')}.zip")
     zip_url = repository.get_archive_link("zipball")
     response = requests.get(zip_url)
-    with open(f"~/storage/assets/{repository.full_name.replace('/', '-')}.zip", "wb") as f:
+    with open(file_path, "wb") as f:
         f.write(response.content)
 
 for file in os.listdir("~/storage/assets"):
