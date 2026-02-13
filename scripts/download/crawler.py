@@ -29,11 +29,11 @@ for repo in repositories[:50]:  # adjust limit as needed
     zip_url = repo.get_archive_link("zipball")
 
     try:
-        # Efficient API call — no zip download
-        repo.get_contents("pubspec.yaml")
-        repo.get_contents("android")
-        repo.get_contents("lib/main.dart")
-        buildable = True
+        branch = repo.default_branch
+        tree = repo.get_git_tree(branch, recursive=True)
+        paths = [item.path for item in tree.tree]
+
+        buildable = any(p.endswith("pubspec.yaml") for p in paths) and any(p.endswith("/android") or "/android/" in p for p in paths) and any(p.endswith("lib/main.dart") for p in paths)
     except Exception:
         buildable = False
 
