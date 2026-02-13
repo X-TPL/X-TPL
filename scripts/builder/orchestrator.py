@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 ROOT = pathlib.Path(__file__).parent.resolve()
 OUTPUT_DIR = ROOT / "output"
 DOCKERFILE_DIR = ROOT
-
+GLOBAL_LOG = OUTPUT_DIR / "build.log"
 IMAGE_PREFIX = "flutter-android"
 BUILD_LOCKS = {}  # (flutter_version, jdk_version) -> Lock
 GLOBAL_LOCK = threading.Lock()
@@ -95,7 +95,7 @@ def ensure_image(flutter_version: str):
             "--build-arg", f"JDK_VERSION={jdk_version}",
             "-t", tag,
             str(DOCKERFILE_DIR),
-        ])
+        ], GLOBAL_LOG)
 
 
 # ---------- build execution ----------
