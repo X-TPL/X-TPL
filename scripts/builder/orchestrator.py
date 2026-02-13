@@ -16,9 +16,26 @@ GLOBAL_LOCK = threading.Lock()
 
 # ---------- helpers ----------
 
-def run(cmd, check=True):
-    print(">", " ".join(cmd))
-    return subprocess.run(cmd, check=check)
+def run(cmd, log_file: pathlib.Path, check=True):
+    with log_file.open("a") as f:
+        f.write("\n> " + " ".join(cmd) + "\n")
+
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+
+        for line in process.stdout:
+            print(line, end="")      # still show live
+            f.write(line)            # write to file
+
+        process.wait()
+
+        if check and process.returncode != 0:
+            raise subprocess.CalledProcessError(process.returncode, cmd)
+
 
 
 def load_manifest():
@@ -90,27 +107,44 @@ def build_app(app):
     app_path = ROOT / app["path"]
     output_type = app.get("output", "apk")
 
-    ensure_image(flutter_version)
-
     out_dir = OUTPUT_DIR / app_id
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    build_cmd = (
-        "flutter pub get && "
-        f"flutter build {output_type} --debug "
-        f"2>&1 | tee /out/{app_id}.log"
-    )
+    log_file = out_dir / "build.log"
+    log_file.write_text("")  # clear previous log
 
-    run([
-        "docker", "run", "--rm",
-        "-v", f"{app_path}:/app",
-        "-v", f"{out_dir}:/out",
-        "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
-        image_tag(flutter_version, jdk_version),
-        "bash", "-c", build_cmd,
-    ], check=True)
+    try:
+        run(
+            ["echo", f"Starting build for {app_id}"],
+            log_file,
+            check=False
+        )
 
-    print(f"[done] {app_id}")
+        ensure_image(flutter_version)
+
+        run([
+            "docker", "run", "--rm",
+            "-v", f"{app_path}:/app",
+            "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
+            image_tag(flutter_version, jdk_version),
+            "bash", "-c",
+            f"cd /app && flutter pub get && flutter build {output_type} --debug"
+        ], log_file)
+
+        run(
+            ["echo", f"Build finished for {app_id}"],
+            log_file,
+            check=False
+        )
+
+        print(f"[done] {app_id}")
+
+    except Exception as e:
+        with log_file.open("a") as f:
+            f.write(f"\nERROR: {e}\n")
+
+        print(f"[error] {app_id}: {e}")
+
 
 
 # ---------- main ----------
