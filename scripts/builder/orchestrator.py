@@ -128,7 +128,7 @@ def build_app(app):
             "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
             image_tag(flutter_version, jdk_version),
             "bash", "-c",
-            f"cd /app && flutter pub get && flutter build {output_type} --debug"
+            f"cd /app && flutter pub get && flutter build {output_type} --debug --no-pub"
         ], log_file)
 
         run(

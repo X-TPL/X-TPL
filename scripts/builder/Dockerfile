@@ -11,6 +11,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 ENV ANDROID_HOME=/opt/android
 ENV ANDROID_SDK_ROOT=/opt/android
 ENV FLUTTER_HOME=/opt/flutter
+ENV GRADLE_USER_HOME=/opt/gradle
+RUN mkdir -p /opt/gradle
 
 ENV PATH="$FLUTTER_HOME/bin:$FLUTTER_HOME/bin/cache/dart-sdk/bin:\
 $ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
