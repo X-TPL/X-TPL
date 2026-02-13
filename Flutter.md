@@ -26,3 +26,9 @@ git clone <repo>
 cd <repo>
 fvm flutter pub get
 fvm flutter build apk --debug
+
+# Versioning
+
+Android 14 uses Java 17
+Android 13 and 12 use Java 11
+https://developer.android.com/build/jdks
