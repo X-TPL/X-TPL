@@ -77,6 +77,15 @@ def analyze():
         pubspecs = list(repo_dir.rglob("pubspec.yaml"))
 
         for pubspec_path in pubspecs:
+            base_dir = pubspec_path.parent
+
+            # Only consider valid Flutter app roots
+            android_dir = base_dir / "android"
+            main_file = base_dir / "lib" / "main.dart"
+
+            if not android_dir.exists() or not main_file.exists():
+                # Skip packages/examples
+                continue
 
             try:
                 text = pubspec_path.read_text()
@@ -84,7 +93,7 @@ def analyze():
 
                 app_entry = {
                     "id": repo_dir.name,
-                    "path": normalize_path(pubspec_path.parent),
+                    "path": normalize_path(base_dir),
                     "flutter": flutter_version,
                     "output": "apk"
                 }
