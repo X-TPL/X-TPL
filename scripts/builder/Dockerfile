@@ -13,7 +13,7 @@ ENV ANDROID_SDK_ROOT=/opt/android
 ENV FLUTTER_HOME=/opt/flutter
 
 ENV PATH="$FLUTTER_HOME/bin:$FLUTTER_HOME/bin/cache/dart-sdk/bin:\
-    $ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
 
 # ---------- base deps ----------
 RUN apt-get update && apt-get install -y \
@@ -33,11 +33,16 @@ RUN java -version
 # ---------- android sdk ----------
 RUN mkdir -p $ANDROID_HOME/cmdline-tools
 
-RUN curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_SDK_VERSION}_latest.zip \
-    -o /tmp/cmdline-tools.zip \
-    && unzip /tmp/cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools \
-    && mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest \
-    && rm /tmp/cmdline-tools.zip
+# Conditional SDK tools depending on JDK version
+RUN if [ "$JDK_VERSION" = "11" ]; then \
+        SDK_URL="https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip"; \
+    else \
+        SDK_URL="https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_SDK_VERSION}_latest.zip"; \
+    fi && \
+    curl -fsSL $SDK_URL -o /tmp/cmdline-tools.zip && \
+    unzip /tmp/cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools && \
+    mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest && \
+    rm /tmp/cmdline-tools.zip
 
 # ---------- accept licenses ----------
 RUN yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
