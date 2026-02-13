@@ -1,4 +1,3 @@
-import os
 import json
 import requests
 from zipfile import ZipFile
