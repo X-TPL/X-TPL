@@ -97,7 +97,7 @@ def build_app(app):
 
     build_cmd = (
         "flutter pub get && "
-        f"flutter build {output_type} --release --no-daemon "
+        f"flutter build {output_type} --debug "
         f"2>&1 | tee /out/{app_id}.log"
     )
 
