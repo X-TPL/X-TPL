@@ -3,7 +3,8 @@ FROM ubuntu:22.04
 
 # ---------- build args ----------
 ARG FLUTTER_VERSION
-ARG ANDROID_SDK_VERSION=11076708   ## cmdline-tools revision
+ARG ANDROID_SDK_VERSION=11076708
+ARG JDK_VERSION=17               
 ARG DEBIAN_FRONTEND=noninteractive
 
 # ---------- env ----------
@@ -22,9 +23,12 @@ RUN apt-get update && apt-get install -y \
     xz-utils \
     zip \
     libglu1-mesa \
-    openjdk-17-jdk \
     ca-certificates \
+    openjdk-${JDK_VERSION}-jdk \
     && rm -rf /var/lib/apt/lists/*
+
+# ---------- verify java ----------
+RUN java -version
 
 # ---------- android sdk ----------
 RUN mkdir -p $ANDROID_HOME/cmdline-tools

@@ -10,7 +10,7 @@ OUTPUT_DIR = ROOT / "output"
 DOCKERFILE_DIR = ROOT
 
 IMAGE_PREFIX = "flutter-android"
-BUILD_LOCKS = {}  # flutter_version -> Lock
+BUILD_LOCKS = {}  # (flutter_version, jdk_version) -> Lock
 GLOBAL_LOCK = threading.Lock()
 
 
@@ -26,10 +26,22 @@ def load_manifest():
         return yaml.safe_load(f)["apps"]
 
 
+# ---------- JDK selection logic ----------
+
+def pick_jdk(flutter_version: str) -> int:
+    major, minor, *_ = map(int, flutter_version.split("."))
+
+    # Flutter 3.16+ typically requires newer AGP -> JDK 17
+    if major > 3 or (major == 3 and minor >= 16):
+        return 17
+
+    return 11
+
+
 # ---------- docker image handling ----------
 
-def image_tag(flutter_version: str) -> str:
-    return f"{IMAGE_PREFIX}:{flutter_version}"
+def image_tag(flutter_version: str, jdk_version: int) -> str:
+    return f"{IMAGE_PREFIX}:{flutter_version}-jdk{jdk_version}"
 
 
 def image_exists(tag: str) -> bool:
@@ -42,23 +54,28 @@ def image_exists(tag: str) -> bool:
 
 
 def ensure_image(flutter_version: str):
-    tag = image_tag(flutter_version)
+    jdk_version = pick_jdk(flutter_version)
+    tag = image_tag(flutter_version, jdk_version)
 
     if image_exists(tag):
         return
 
-    # one lock per flutter version
+    # one lock per flutter+jdk combo
+    key = (flutter_version, jdk_version)
+
     with GLOBAL_LOCK:
-        lock = BUILD_LOCKS.setdefault(flutter_version, threading.Lock())
+        lock = BUILD_LOCKS.setdefault(key, threading.Lock())
 
     with lock:
         if image_exists(tag):
             return
 
         print(f"[image] building {tag}")
+
         run([
             "docker", "build",
             "--build-arg", f"FLUTTER_VERSION={flutter_version}",
+            "--build-arg", f"JDK_VERSION={jdk_version}",
             "-t", tag,
             str(DOCKERFILE_DIR),
         ])
@@ -69,6 +86,7 @@ def ensure_image(flutter_version: str):
 def build_app(app):
     app_id = app["id"]
     flutter_version = app["flutter"]
+    jdk_version = pick_jdk(flutter_version)
     app_path = ROOT / app["path"]
     output_type = app.get("output", "apk")
 
@@ -79,15 +97,16 @@ def build_app(app):
 
     build_cmd = (
         "flutter pub get && "
-        f"flutter build {output_type} --release 2>&1 | tee /out/{app['id']}.log"
+        f"flutter build {output_type} --release --no-daemon "
+        f"2>&1 | tee /out/{app_id}.log"
     )
+
     run([
         "docker", "run", "--rm",
         "-v", f"{app_path}:/app",
         "-v", f"{out_dir}:/out",
         "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
-        #"-v", f"{pathlib.Path.home()}/.gradle:/root/.gradle",
-        image_tag(flutter_version),
+        image_tag(flutter_version, jdk_version),
         "bash", "-c", build_cmd,
     ], check=True)
 
