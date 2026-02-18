@@ -52,15 +52,43 @@ def flutter_from_dart(dart_version: str) -> str:
 
 
 def extract_flutter_version(text: str) -> str:
+    """
+    Determines the correct Flutter version considering BOTH:
+    - sdk (Dart) constraint
+    - flutter constraint
+
+    Returns a Flutter version that satisfies both.
+    """
+
     flutter_match = FLUTTER_RE.search(text)
-    if flutter_match:
-        return flutter_match.group(1)
-
     dart_match = DART_RE.search(text)
-    if dart_match:
-        return flutter_from_dart(dart_match.group(1))
 
-    raise ValueError("No Flutter/Dart SDK constraint found")
+    flutter_lower = Version(flutter_match.group(1)) if flutter_match else None
+    dart_lower = Version(dart_match.group(1)) if dart_match else None
+
+    if not flutter_lower and not dart_lower:
+        raise ValueError("No Flutter/Dart SDK constraint found")
+
+    # If Dart constraint exists → compute minimum Flutter required
+    flutter_required_by_dart = None
+    if dart_lower:
+        flutter_required_by_dart = Version(
+            flutter_from_dart(str(dart_lower))
+        )
+
+    # Decision logic:
+    if flutter_lower and flutter_required_by_dart:
+        # return the stricter (higher) requirement
+        return str(max(flutter_lower, flutter_required_by_dart))
+
+    if flutter_lower:
+        return str(flutter_lower)
+
+    if flutter_required_by_dart:
+        return str(flutter_required_by_dart)
+
+    raise RuntimeError("Unable to determine Flutter version")
+
 
 
 # -------------------------
