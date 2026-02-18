@@ -41,7 +41,7 @@ RUN if [ "$JDK_VERSION" = "11" ]; then \
     else \
         SDK_URL="https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_SDK_VERSION}_latest.zip"; \
     fi && \
-    curl -fsSL $SDK_URL -o /tmp/cmdline-tools.zip --connect-timeout 60 --retry 5 --retry-delay 5 && \
+    curl -fsSL $SDK_URL -o /tmp/cmdline-tools.zip && \
     unzip /tmp/cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools && \
     mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest && \
     rm /tmp/cmdline-tools.zip
