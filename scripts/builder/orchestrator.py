@@ -3,7 +3,7 @@ import yaml
 import pathlib
 import threading
 import os
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 ROOT = pathlib.Path(__file__).parent.resolve()
 OUTPUT_DIR = ROOT / "output"
@@ -20,21 +20,18 @@ def run(cmd, log_file: pathlib.Path, check=True):
     with log_file.open("a") as f:
         f.write("\n> " + " ".join(cmd) + "\n")
 
-        process = subprocess.Popen(
+        result = subprocess.run(
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
         )
 
-        for line in process.stdout:
-            print(line, end="")      # still show live
-            f.write(line)            # write to file
+        f.write(result.stdout)
+        print(result.stdout, end="")
 
-        process.wait()
-
-        if check and process.returncode != 0:
-            raise subprocess.CalledProcessError(process.returncode, cmd)
+        if check and result.returncode != 0:
+            raise subprocess.CalledProcessError(result.returncode, cmd)
 
 
 
@@ -88,14 +85,13 @@ def ensure_image(flutter_version: str):
             return
 
         print(f"[image] building {tag}")
-
         run([
             "docker", "build",
             "--build-arg", f"FLUTTER_VERSION={flutter_version}",
             "--build-arg", f"JDK_VERSION={jdk_version}",
             "-t", tag,
             str(DOCKERFILE_DIR),
-        ], GLOBAL_LOG)
+        ], GLOBAL_LOG, check=False)
 
 
 # ---------- build execution ----------
@@ -154,9 +150,16 @@ def main():
     OUTPUT_DIR.mkdir(exist_ok=True)
 
     max_parallel = max(1, (os.cpu_count() or 2) // 2)
-
+    futures = []
     with ThreadPoolExecutor(max_workers=max_parallel) as pool:
-        pool.map(build_app, apps)
+        for app in apps:
+            futures.append(pool.submit(build_app, app))
+
+        for future in as_completed(futures):
+            try:
+                future.result()  # raises exception if build_app failed
+            except Exception as e:
+                print(f"[executor error] {e}")
 
 
 if __name__ == "__main__":
