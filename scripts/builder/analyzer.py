@@ -19,15 +19,22 @@ DART_RE = re.compile(
 
 DART_TO_FLUTTER = [
     # Dart 3.x
+    ("3.11.0", "3.41.0"),
+    ("3.10.0", "3.38.0"),
+    ("3.9.0", "3.35.0"),
+    ("3.8.0", "3.32.0"),
+    ("3.7.0", "3.29.0"),
+    ("3.6.0", "3.26.0"),
+    ("3.5.0", "3.24.0"),
     ("3.4.0", "3.22.0"),
     ("3.3.0", "3.19.0"),
     ("3.2.0", "3.16.0"),
     ("3.1.0", "3.13.0"),
-    ("3.0.0", "3.10.0"),
+    ("3.0.0", "3.13.0"), # manual change from 3.10
 
     # Dart 2.19–2.17
     ("2.19.0", "3.7.0"),
-    ("2.18.0", "3.3.0"),
+    ("2.18.0", "3.7.0"), # manual adjusted from 3.3
     ("2.17.0", "3.0.0"),
 
     # Dart 2.16–2.12
@@ -58,11 +65,22 @@ def normalize_path(path: Path) -> str:
 def flutter_from_dart(dart_version: str) -> str:
     dart_v = Version(dart_version)
 
-    for dart_min, flutter_min in DART_TO_FLUTTER:
-        if dart_v >= Version(dart_min):
+    # Convert mapping to Version objects
+    mappings = [
+        (Version(dart_min), flutter_min)
+        for dart_min, flutter_min in DART_TO_FLUTTER
+    ]
+
+    # Sort ascending (oldest → newest)
+    mappings.sort(key=lambda x: x[0])
+
+    # Find first Dart version that is >= detected version (round UP)
+    for dart_min, flutter_min in mappings:
+        if dart_v <= dart_min:
             return flutter_min
 
-    raise RuntimeError(f"No compatible Flutter version for Dart {dart_version}")
+    # If higher than everything we know → use latest available
+    return mappings[-1][1]
 
 
 def extract_flutter_version(text: str) -> str:
