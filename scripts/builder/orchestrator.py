@@ -63,6 +63,7 @@ def run(cmd, log_file: pathlib.Path, check=True):
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
+            timeout=1800
         )
 
         f.write(result.stdout)
@@ -129,12 +130,16 @@ def ensure_image(flutter_version: str):
             "--build-arg", f"JDK_VERSION={jdk_version}",
             "-t", tag,
             str(DOCKERFILE_DIR),
-        ], GLOBAL_LOG, check=False)
+        ], GLOBAL_LOG, check=True)
+        if not image_exists(tag):
+            raise RuntimeError(f"Image build failed for {tag}")
 
 
 # ---------- build execution ----------
 
 def build_app(app):
+    attempts = 0
+    max_attempts = 5
     app_id = app["id"]
     flutter_version = app["flutter"]
     output_type = app.get("output", "apk")
@@ -146,7 +151,8 @@ def build_app(app):
     log_file = out_dir / "build.log"
     log_file.write_text("")
 
-    while flutter_version:
+    while flutter_version and attempts < max_attempts:
+        attempts += 1
         jdk_version = pick_jdk(flutter_version)
 
         try:
