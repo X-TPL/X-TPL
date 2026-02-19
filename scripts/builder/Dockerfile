@@ -65,7 +65,8 @@ RUN git clone https://github.com/flutter/flutter.git \
 RUN flutter doctor --android-licenses && flutter doctor
 
 # ---------- gradle sanity ----------
-ENV GRADLE_OPTS="-Dorg.gradle.daemon=false"
+ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false -Xmx4g"
+ENV ORG_GRADLE_PROJECT_org.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g -Dkotlin.daemon.jvm.options=-Xmx2g"
 
 # ---------- workdir ----------
 WORKDIR /app
