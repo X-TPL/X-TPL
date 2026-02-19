@@ -70,3 +70,6 @@ ENV ORG_GRADLE_PROJECT_org.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g -Dkotl
 
 # ---------- workdir ----------
 WORKDIR /app
+
+# create a .env in the workdir
+RUN touch /app/.env
