@@ -14,7 +14,7 @@ BUILD_LOCKS = {}  # (flutter_version, jdk_version) -> Lock
 GLOBAL_LOCK = threading.Lock()
 
 # Ordered list of known Flutter versions (ascending)
-FLUTTER_VERSIONS = sorted([
+FLUTTER_VERSIONS = [
     "1.12.13",
     "1.12.13+hotfix.5",
     "1.17.0",
@@ -38,7 +38,7 @@ FLUTTER_VERSIONS = sorted([
     "3.35.0",
     "3.38.0",
     "3.41.0",
-])
+]
 
 
 # ---------- helpers ----------
