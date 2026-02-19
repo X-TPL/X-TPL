@@ -7,13 +7,14 @@ from packaging.version import Version
 EXTRACT_ROOT = Path("/home/ubuntu/storage/assets/extracted")
 OUTPUT_FILE = "build_manifest.yaml"
 
-FLUTTER_RE = re.compile(
-    r'flutter:\s*[\'"]?\s*>=\s*([0-9]+(?:\.[0-9]+){1,2})',
+FLUTTER_RANGE_RE = re.compile(
+    r'flutter:\s*[\'"]?\s*>=\s*([0-9]+(?:\.[0-9]+){1,2})'
+    r'(?:\s*<\s*([0-9]+(?:\.[0-9]+){1,2}))?',
     re.IGNORECASE
 )
 
-DART_RE = re.compile(
-    r'sdk:\s*[\'"]?\s*>=\s*([0-9]+(?:\.[0-9]+){1,2})',
+DART_RANGE_RE = re.compile(
+    r'sdk:\s*[\'"]?\s*>=\s*([0-9]+(?:\.[0-9]+){1,2})\s*<\s*([0-9]+(?:\.[0-9]+){1,2})',
     re.IGNORECASE
 )
 
@@ -82,44 +83,101 @@ def flutter_from_dart(dart_version: str) -> str:
     # If higher than everything we know → use latest available
     return mappings[-1][1]
 
+def flutter_from_dart_upper_bound(upper_bound: Version) -> str:
+    """
+    Pick the highest Dart version we know that is still
+    strictly below the upper bound constraint.
+    """
+
+    mappings = [
+        (Version(dart_min), flutter_min)
+        for dart_min, flutter_min in DART_TO_FLUTTER
+    ]
+
+    # sort ascending
+    mappings.sort(key=lambda x: x[0])
+
+    best_match = None
+
+    for dart_min, flutter_min in mappings:
+        if dart_min < upper_bound:
+            best_match = flutter_min
+        else:
+            break
+
+    if best_match:
+        return best_match
+
+    raise RuntimeError(
+        f"No Dart mapping satisfies upper bound < {upper_bound}"
+    )
 
 def extract_flutter_version(text: str) -> str:
     """
-    Determines the correct Flutter version considering BOTH:
-    - sdk (Dart) constraint
-    - flutter constraint
-
-    Returns a Flutter version that satisfies both.
+    Determines the correct Flutter version considering:
+    - Dart upper bound (preferred strategy)
+    - Flutter lower and upper bounds
     """
 
-    flutter_match = FLUTTER_RE.search(text)
-    dart_match = DART_RE.search(text)
+    flutter_match = FLUTTER_RANGE_RE.search(text)
+    dart_match = DART_RANGE_RE.search(text)
 
-    flutter_lower = Version(flutter_match.group(1)) if flutter_match else None
-    dart_lower = Version(dart_match.group(1)) if dart_match else None
+    flutter_lower = None
+    flutter_upper = None
 
-    if not flutter_lower and not dart_lower:
+    if flutter_match:
+        flutter_lower = Version(flutter_match.group(1))
+        if flutter_match.group(2):
+            flutter_upper = Version(flutter_match.group(2))
+
+    dart_upper = None
+    if dart_match:
+        dart_upper = Version(dart_match.group(2))
+
+    if not flutter_match and not dart_match:
         raise ValueError("No Flutter/Dart SDK constraint found")
 
-    # If Dart constraint exists → compute minimum Flutter required
+    # -----------------------------
+    # Step 1: Pick from Dart upper bound
+    # -----------------------------
     flutter_required_by_dart = None
-    if dart_lower:
-        flutter_required_by_dart = Version(
-            flutter_from_dart(str(dart_lower))
+
+    if dart_upper:
+        candidate = Version(
+            flutter_from_dart_upper_bound(dart_upper)
         )
+        flutter_required_by_dart = candidate
 
-    # Decision logic:
-    if flutter_lower and flutter_required_by_dart:
-        # return the stricter (higher) requirement
-        return str(max(flutter_lower, flutter_required_by_dart))
-
-    if flutter_lower:
-        return str(flutter_lower)
+    # -----------------------------
+    # Step 2: Apply Flutter constraints
+    # -----------------------------
+    candidates = []
 
     if flutter_required_by_dart:
-        return str(flutter_required_by_dart)
+        candidates.append(flutter_required_by_dart)
 
-    raise RuntimeError("Unable to determine Flutter version")
+    if flutter_lower:
+        candidates.append(flutter_lower)
+
+    if not candidates:
+        raise RuntimeError("Unable to determine Flutter version")
+
+    selected = max(candidates)
+
+    # Enforce flutter upper bound if present
+    if flutter_upper and selected >= flutter_upper:
+        # choose nearest version below upper bound
+        mappings = sorted(
+            [Version(f) for _, f in DART_TO_FLUTTER]
+        )
+        valid = [v for v in mappings if v < flutter_upper]
+        if not valid:
+            raise RuntimeError(
+                f"No Flutter version satisfies < {flutter_upper}"
+            )
+        selected = valid[-1]
+
+    return str(selected)
 
 
 
