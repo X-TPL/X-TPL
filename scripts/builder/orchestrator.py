@@ -13,8 +13,46 @@ IMAGE_PREFIX = "flutter-android"
 BUILD_LOCKS = {}  # (flutter_version, jdk_version) -> Lock
 GLOBAL_LOCK = threading.Lock()
 
+# Ordered list of known Flutter versions (ascending)
+FLUTTER_VERSIONS = sorted([
+    "1.12.13",
+    "1.12.13+hotfix.5",
+    "1.17.0",
+    "1.20.0",
+    "1.22.0",
+    "2.0.0",
+    "2.2.0",
+    "2.5.0",
+    "2.8.0",
+    "2.10.0",
+    "3.0.0",
+    "3.7.0",
+    "3.13.0",
+    "3.16.0",
+    "3.19.0",
+    "3.22.0",
+    "3.24.0",
+    "3.26.0",
+    "3.29.0",
+    "3.32.0",
+    "3.35.0",
+    "3.38.0",
+    "3.41.0",
+])
+
 
 # ---------- helpers ----------
+
+def next_flutter_version(current: str):
+    try:
+        idx = FLUTTER_VERSIONS.index(current)
+    except ValueError:
+        return None
+
+    if idx + 1 < len(FLUTTER_VERSIONS):
+        return FLUTTER_VERSIONS[idx + 1]
+
+    return None
 
 def run(cmd, log_file: pathlib.Path, check=True):
     with log_file.open("a") as f:
@@ -99,47 +137,60 @@ def ensure_image(flutter_version: str):
 def build_app(app):
     app_id = app["id"]
     flutter_version = app["flutter"]
-    jdk_version = pick_jdk(flutter_version)
-    app_path = ROOT / app["path"]
     output_type = app.get("output", "apk")
+    app_path = ROOT / app["path"]
 
     out_dir = OUTPUT_DIR / app_id
     out_dir.mkdir(parents=True, exist_ok=True)
 
     log_file = out_dir / "build.log"
-    log_file.write_text("")  # clear previous log
+    log_file.write_text("")
 
-    try:
-        run(
-            ["echo", f"Starting build for {app_id}"],
-            log_file,
-            check=False
-        )
+    while flutter_version:
+        jdk_version = pick_jdk(flutter_version)
 
-        ensure_image(flutter_version)
+        try:
+            run(
+                ["echo", f"Attempting build for {app_id} with Flutter {flutter_version}"],
+                log_file,
+                check=False
+            )
 
-        run([
-            "docker", "run", "--rm",
-            "-v", f"{app_path}:/app",
-            "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
-            image_tag(flutter_version, jdk_version),
-            "bash", "-c",
-            f"cd /app && flutter pub get && flutter build {output_type} --debug --no-pub"
-        ], log_file)
+            ensure_image(flutter_version)
 
-        run(
-            ["echo", f"Build finished for {app_id}"],
-            log_file,
-            check=False
-        )
+            run([
+                "docker", "run", "--rm",
+                "-v", f"{app_path}:/app",
+                "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
+                image_tag(flutter_version, jdk_version),
+                "bash", "-c",
+                f"cd /app && flutter pub get && flutter build {output_type} --debug --no-pub"
+            ], log_file)
 
-        print(f"[done] {app_id}")
+            run(
+                ["echo", f"Build succeeded with Flutter {flutter_version}"],
+                log_file,
+                check=False
+            )
 
-    except Exception as e:
-        with log_file.open("a") as f:
-            f.write(f"\nERROR: {e}\n")
+            print(f"[done] {app_id} ({flutter_version})")
+            return
 
-        print(f"[error] {app_id}: {e}")
+        except subprocess.CalledProcessError:
+            run(
+                ["echo", f"Build failed with Flutter {flutter_version}, trying next version..."],
+                log_file,
+                check=False
+            )
+
+            flutter_version = next_flutter_version(flutter_version)
+
+    # If we exit loop → all versions failed
+    with log_file.open("a") as f:
+        f.write("\nERROR: All Flutter versions failed\n")
+
+    print(f"[failed] {app_id} (all versions)")
+
 
 
 
