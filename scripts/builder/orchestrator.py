@@ -157,7 +157,7 @@ def build_app(app):
 
         try:
             run(
-                ["echo", f"Attempting build for {app_id} with Flutter {flutter_version}"],
+                ["echo", f"Attempting build for {app_id} with Flutter {flutter_version} and jdk {jdk_version}"],
                 log_file,
                 check=False
             )
@@ -167,10 +167,21 @@ def build_app(app):
             run([
                 "docker", "run", "--rm",
                 "-v", f"{app_path}:/app",
+                "-v", f"{out_dir}:/output",
                 "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
                 image_tag(flutter_version, jdk_version),
                 "bash", "-c",
-                f"cd /app && flutter pub get && flutter build {output_type} --debug --no-pub"
+                f"""
+                cd /app && \
+                flutter pub get && \
+                flutter clean && \
+                (./gradlew clean || true) && \
+                if grep -R "part '.*\\.g\\.dart'" lib >/dev/null 2>&1; then \
+                    flutter pub run build_runner build --delete-conflicting-outputs || true; \
+                fi && \
+                flutter build {output_type} --debug --no-pub
+                cp build/app/outputs/flutter-apk/*.apk /output/
+                """
             ], log_file)
 
             run(
