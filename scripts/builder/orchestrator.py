@@ -58,16 +58,19 @@ def run(cmd, log_file: pathlib.Path, check=True):
     with log_file.open("a") as f:
         f.write("\n> " + " ".join(cmd) + "\n")
 
-        result = subprocess.run(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            timeout=1800
-        )
+        try:
+            result = subprocess.run(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                timeout=1800
+            )
+        except subprocess.TimeoutExpired as e:
+            f.write("\nERROR: Command timed out\n")
+            raise
 
         f.write(result.stdout)
-        print(result.stdout, end="")
 
         if check and result.returncode != 0:
             raise subprocess.CalledProcessError(result.returncode, cmd)
@@ -173,6 +176,8 @@ def build_app(app):
                 "bash", "-c",
                 f"""
                 cd /app && \
+                touch .env && \
+                touch android/
                 flutter clean && \
                 flutter pub get && \
                 (./gradlew clean || true) && \
@@ -193,9 +198,9 @@ def build_app(app):
             print(f"[done] {app_id} ({flutter_version})")
             return
 
-        except subprocess.CalledProcessError:
+        except Exception as e:
             run(
-                ["echo", f"Build failed with Flutter {flutter_version}, trying next version..."],
+                ["echo", f"Build failed with Flutter {flutter_version} and jdk version {jdk_version} with the following error: {e}"],
                 log_file,
                 check=False
             )
