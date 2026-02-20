@@ -139,7 +139,7 @@ def ensure_image(flutter_version: str):
 
 def build_app(app):
     attempts = 0
-    max_attempts = 5
+    max_attempts = 10
     app_id = app["id"]
     flutter_version = app["flutter"]
     output_type = app.get("output", "apk")
