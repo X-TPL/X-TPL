@@ -22,7 +22,7 @@ g = Github(auth=Auth.Token(token))
 repos_data = []
 
 repositories = g.search_repositories(query="language:dart topic:app", sort='updated')
-print(f"{len(repositories)} Repositories found in total")
+print(f"{repositories.totalCount} Repositories found in total")
 for repo in repositories[:100]:
     print(f"[scan] {repo.full_name}")
 
