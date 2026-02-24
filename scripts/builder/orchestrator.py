@@ -36,6 +36,7 @@ FLUTTER_VERSIONS = [
     "3.35.0",
     "3.38.0",
     "3.41.0",
+    "3.41.2" # latest build as of 24.02.26
 ]
 
 
@@ -79,6 +80,49 @@ def load_manifest():
     with open(ROOT / "build_manifest.yaml") as f:
         return yaml.safe_load(f)["apps"]
 
+
+def get_missing_assets(app_path: pathlib.Path):
+    pubspec_path = app_path / "pubspec.yaml"
+    if not pubspec_path.exists():
+        return []
+
+    data = yaml.safe_load(pubspec_path.read_text()) or {}
+    flutter_section = data.get("flutter", {})
+    assets = flutter_section.get("assets", [])
+
+    if not isinstance(assets, list):
+        return []
+
+    missing = []
+
+    for asset in assets:
+        asset_path = app_path / asset
+
+        if asset.endswith("/"):
+            if not asset_path.exists():
+                missing.append(asset.rstrip("/"))
+        else:
+            if not asset_path.exists():
+                missing.append(asset)
+
+    return missing
+
+def create_asset_cmd(missing_assets):
+    asset_creation_cmds = []
+    for asset in missing_assets:
+        if "." in pathlib.Path(asset).name:
+            # treat as file
+            asset_creation_cmds.append(
+                f'mkdir -p "$(dirname \\"{asset}\\")" && touch "{asset}"'
+            )
+        else:
+            # treat as directory
+            asset_creation_cmds.append(
+                f'mkdir -p "{asset}"'
+            )
+
+    asset_script = " && \\\n                ".join(asset_creation_cmds)
+    return asset_script
 
 # ---------- JDK selection logic ----------
 
@@ -151,7 +195,8 @@ def build_app(app):
 
     log_file = out_dir / "build.log"
     log_file.write_text("")
-
+    missing_assets = get_missing_assets(app_path)
+    assets = create_asset_cmd(missing_assets)
     while flutter_version and attempts < max_attempts:
         attempts += 1
         jdk_version = pick_jdk(flutter_version)
@@ -174,8 +219,7 @@ def build_app(app):
                 "bash", "-c",
                 f"""
                 cd /app && \
-                touch .env && \
-                touch android/key.properties && \
+                {assets} && \
                 flutter clean && \
                 flutter pub get && \
                 (./gradlew clean || true) && \
