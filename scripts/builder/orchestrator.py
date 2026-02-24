@@ -120,7 +120,9 @@ def create_asset_cmd(missing_assets):
             asset_creation_cmds.append(
                 f'mkdir -p "{asset}"'
             )
-
+    if not asset_creation_cmds:
+        # no assets → just return true (does nothing)
+        return "true"
     asset_script = " && \\\n                ".join(asset_creation_cmds)
     return asset_script
 
