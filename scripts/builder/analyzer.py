@@ -144,6 +144,11 @@ def has_bad_dependency(pubspec_data: dict) -> bool:
 
     return False
 
+def has_workspace(pubspec_data: dict) -> bool:
+    workspaces = pubspec_data.get("workspace", {})
+    if isinstance(workspaces, dict):
+        return True
+    
 
 def analyze():
     apps = []
@@ -172,6 +177,10 @@ def analyze():
                 # 🚫 Skip apps with git dependencies
                 if has_bad_dependency(pubspec_data):
                     print(f"[skip] {repo_dir.name}: contains bad dependency")
+                    continue
+
+                if has_workspace(pubspec_data):
+                    print(f"[skip] {repo_dir.name}: contains workspace")
                     continue
 
                 flutter_version = extract_flutter_version(pubspec_data)
