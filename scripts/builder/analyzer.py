@@ -23,8 +23,8 @@ DART_TO_FLUTTER = [
     ("3.10.0", "3.38.0"),
     ("3.9.0", "3.35.0"),
     ("3.8.0", "3.32.0"),
-    ("3.7.0", "3.29.0"),
-    ("3.6.0", "3.26.0"),
+    ("3.7.0", "3.32.0"), # manual change from 3.29
+    ("3.6.0", "3.32.0"), # manual change from 3.26
     ("3.5.0", "3.24.0"),
     ("3.4.0", "3.22.0"),
     ("3.3.0", "3.19.0"),
@@ -127,6 +127,20 @@ def extract_flutter_version(text: str) -> str:
 # Analyzer
 # -------------------------
 
+def has_bad_dependency(pubspec_data: dict) -> bool:
+    for section in ["dependencies", "dev_dependencies"]:
+        deps = pubspec_data.get(section, {})
+
+        if not isinstance(deps, dict):
+            continue
+
+        for value in deps.values():
+            if isinstance(value, dict) and ("git" in value or "path" in value):
+                return True
+
+    return False
+
+
 def analyze():
     apps = []
 
@@ -149,6 +163,13 @@ def analyze():
 
             try:
                 text = pubspec_path.read_text()
+                pubspec_data = yaml.safe_load(text) or {}
+
+                # 🚫 Skip apps with git dependencies
+                if has_bad_dependency(pubspec_data):
+                    print(f"[skip] {repo_dir.name}: contains bad dependency")
+                    continue
+
                 flutter_version = extract_flutter_version(text)
 
                 app_entry = {
