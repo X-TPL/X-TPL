@@ -8,12 +8,12 @@ EXTRACT_ROOT = Path("/home/ubuntu/storage/assets/extracted")
 OUTPUT_FILE = "build_manifest.yaml"
 
 FLUTTER_RE = re.compile(
-    r'flutter:\s*[\'"]?\s*>=\s*([0-9]+(?:\.[0-9]+){1,2})',
+    r'flutter:\s*[\'"]?\s*(?:>=|\^)\s*([0-9]+(?:\.[0-9]+){1,2})',
     re.IGNORECASE
 )
 
 DART_RE = re.compile(
-    r'sdk:\s*[\'"]?\s*>=\s*([0-9]+(?:\.[0-9]+){1,2})',
+    r'sdk:\s*[\'"]?\s*(?:>=|\^)\s*([0-9]+(?:\.[0-9]+){1,2})',
     re.IGNORECASE
 )
 
