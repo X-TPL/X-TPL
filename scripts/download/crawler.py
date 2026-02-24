@@ -21,18 +21,36 @@ g = Github(auth=Auth.Token(token))
 # -----------------------
 repos_data = []
 
-repositories = g.search_repositories(query="language:dart app")
+repositories = g.search_repositories(query="language:dart topic:app", sort='updated')
 
-for repo in repositories[:50]:  # adjust limit as needed
+for repo in repositories[:50]:
     print(f"[scan] {repo.full_name}")
 
-    zip_url = repo.get_archive_link("zipball")
+    buildable = False
+    commit = None
+    branch_used = None
 
     try:
-        branch = repo.default_branch
-        tree = repo.get_git_tree(branch, recursive=True)
+        # ---------------------------------
+        # Prefer latest release if exists
+        # ---------------------------------
+        try:
+            release = repo.get_latest_release()
+            target = release.target_commitish
+            print(f"[info] using release: {release.tag_name}")
 
-        # Collect all paths
+            commit = repo.get_commit(target)
+            branch_used = target
+
+        except Exception:
+            # No release found → fallback to default branch
+            branch_used = repo.default_branch
+            commit = repo.get_commit(branch_used)
+
+        # ---------------------------------
+        # Analyze repository tree
+        # ---------------------------------
+        tree = repo.get_git_tree(commit.sha, recursive=True)
         paths = [item.path for item in tree.tree]
 
         # Find all pubspec locations
@@ -41,8 +59,6 @@ for repo in repositories[:50]:  # adjust limit as needed
             for p in paths
             if p.endswith("pubspec.yaml")
         ]
-
-        buildable = False
 
         for base in pubspec_dirs:
             android_dir = f"{base}/android" if base else "android"
@@ -61,13 +77,21 @@ for repo in repositories[:50]:  # adjust limit as needed
 
     except Exception as e:
         print(f"[error] {repo.full_name}: {e}")
-        buildable = False
 
+    # ---------------------------------
+    # Archive URL pinned to commit SHA
+    # ---------------------------------
+    zip_url = None
+    if commit:
+        zip_url = f"https://github.com/{repo.full_name}/archive/{commit.sha}.zip"
 
     repos_data.append({
         "full_name": repo.full_name,
+        "branch_or_tag": branch_used,
+        "commit": commit.sha if commit else None,
         "zip_url": zip_url,
-        "buildable": buildable
+        "buildable": buildable,
+        "fork": repo.fork
     })
 
 # -----------------------
