@@ -22,8 +22,8 @@ g = Github(auth=Auth.Token(token))
 repos_data = []
 
 repositories = g.search_repositories(query="language:dart topic:app", sort='updated')
-
-for repo in repositories[:50]:
+print(f"{len(repositories)} Repositories found in total")
+for repo in repositories[:100]:
     print(f"[scan] {repo.full_name}")
 
     buildable = False
