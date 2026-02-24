@@ -83,20 +83,24 @@ def flutter_from_dart(dart_version: str) -> str:
     return mappings[-1][1]
 
 
-def extract_flutter_version(text: str) -> str:
-    """
-    Determines the correct Flutter version considering BOTH:
-    - sdk (Dart) constraint
-    - flutter constraint
+def extract_flutter_version(pubspec_data: dict) -> str:
+    env = pubspec_data.get("environment", {})
 
-    Returns a Flutter version that satisfies both.
-    """
+    flutter_constraint = env.get("flutter")
+    dart_constraint = env.get("sdk")
 
-    flutter_match = FLUTTER_RE.search(text)
-    dart_match = DART_RE.search(text)
+    flutter_lower = None
+    dart_lower = None
 
-    flutter_lower = Version(flutter_match.group(1)) if flutter_match else None
-    dart_lower = Version(dart_match.group(1)) if dart_match else None
+    if flutter_constraint:
+        match = re.search(r'(?:>=|\^)\s*([0-9]+(?:\.[0-9]+){1,2})', flutter_constraint)
+        if match:
+            flutter_lower = Version(match.group(1))
+
+    if dart_constraint:
+        match = re.search(r'(?:>=|\^)\s*([0-9]+(?:\.[0-9]+){1,2})', dart_constraint)
+        if match:
+            dart_lower = Version(match.group(1))
 
     if not flutter_lower and not dart_lower:
         raise ValueError("No Flutter/Dart SDK constraint found")
@@ -170,7 +174,7 @@ def analyze():
                     print(f"[skip] {repo_dir.name}: contains bad dependency")
                     continue
 
-                flutter_version = extract_flutter_version(text)
+                flutter_version = extract_flutter_version(pubspec_data)
 
                 app_entry = {
                     "id": repo_dir.name,
