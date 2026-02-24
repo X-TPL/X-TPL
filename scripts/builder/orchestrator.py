@@ -32,8 +32,6 @@ FLUTTER_VERSIONS = [
     "3.19.0",
     "3.22.0",
     "3.24.0",
-    "3.26.0",
-    "3.29.0",
     "3.32.0",
     "3.35.0",
     "3.38.0",
@@ -177,7 +175,7 @@ def build_app(app):
                 f"""
                 cd /app && \
                 touch .env && \
-                touch android/
+                touch android/key.properties && \
                 flutter clean && \
                 flutter pub get && \
                 (./gradlew clean || true) && \
