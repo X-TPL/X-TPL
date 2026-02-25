@@ -228,8 +228,9 @@ def build_app(app):
                 if grep -R "part '.*\\.g\\.dart'" lib >/dev/null 2>&1; then \
                     flutter pub run build_runner build --delete-conflicting-outputs || true; \
                 fi && \
-                flutter build {output_type} --debug --no-pub
-                cp build/app/outputs/flutter-apk/*.apk /output/
+                flutter build {output_type} --debug --no-pub --split-per-abi && \
+                cp build/app/outputs/flutter-apk/*.apk /output/ && \
+                cp .dart_tool/package_config.json /output/
                 """
             ], log_file)
 
