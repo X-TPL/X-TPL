@@ -23,7 +23,7 @@ repos_data = []
 
 repositories = g.search_repositories(query="language:dart topic:app", sort='updated')
 print(f"{repositories.totalCount} Repositories found in total")
-for repo in repositories[:100]:
+for repo in repositories:
     print(f"[scan] {repo.full_name}")
 
     buildable = False
@@ -91,6 +91,7 @@ for repo in repositories[:100]:
         "commit": commit.sha if commit else None,
         "zip_url": zip_url,
         "buildable": buildable,
+        "topics": repo.topics,
         "fork": repo.fork
     })
 
