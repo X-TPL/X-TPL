@@ -3,7 +3,6 @@ import yaml
 from pathlib import Path
 from packaging.version import Version
 
-
 EXTRACT_ROOT = Path("/home/ubuntu/storage/assets/extracted")
 OUTPUT_FILE = "build_manifest.yaml"
 
@@ -23,18 +22,18 @@ DART_TO_FLUTTER = [
     ("3.10.0", "3.38.0"),
     ("3.9.0", "3.35.0"),
     ("3.8.0", "3.32.0"),
-    ("3.7.0", "3.32.0"), # manual change from 3.29
-    ("3.6.0", "3.32.0"), # manual change from 3.26
+    ("3.7.0", "3.32.0"),  # manual change from 3.29
+    ("3.6.0", "3.32.0"),  # manual change from 3.26
     ("3.5.0", "3.24.0"),
     ("3.4.0", "3.22.0"),
     ("3.3.0", "3.19.0"),
     ("3.2.0", "3.16.0"),
     ("3.1.0", "3.13.0"),
-    ("3.0.0", "3.13.0"), # manual change from 3.10
+    ("3.0.0", "3.13.0"),  # manual change from 3.10
 
     # Dart 2.19–2.17
     ("2.19.0", "3.7.0"),
-    ("2.18.0", "3.7.0"), # manual adjusted from 3.3
+    ("2.18.0", "3.7.0"),  # manual adjusted from 3.3
     ("2.17.0", "3.0.0"),
 
     # Dart 2.16–2.12
@@ -50,7 +49,7 @@ DART_TO_FLUTTER = [
     ("2.9.0", "1.17.0"),
     ("2.8.0", "1.17.0"),
     ("2.7.0", "1.12.13+hotfix.5"),
-    ("2.6.0", "1.12.13"),           
+    ("2.6.0", "1.12.13"),
 ]
 
 
@@ -126,7 +125,6 @@ def extract_flutter_version(pubspec_data: dict) -> str:
     raise RuntimeError("Unable to determine Flutter version")
 
 
-
 # -------------------------
 # Analyzer
 # -------------------------
@@ -143,7 +141,7 @@ def has_bad_dependency(pubspec_data: dict) -> bool:
                 return True
 
     return False
-    
+
 
 def analyze():
     apps = []
@@ -153,7 +151,7 @@ def analyze():
             continue
 
         pubspecs = list(repo_dir.rglob("pubspec.yaml"))
-
+        counter = 0
         for pubspec_path in pubspecs:
             base_dir = pubspec_path.parent
 
@@ -177,12 +175,12 @@ def analyze():
                 flutter_version = extract_flutter_version(pubspec_data)
 
                 app_entry = {
-                    "id": repo_dir.name,
+                    "id": repo_dir.name if len(pubspecs) == 1 else f"{repo_dir.name}-{counter}",
                     "path": normalize_path(base_dir),
                     "flutter": flutter_version,
                     "output": "apk"
                 }
-
+                counter += 1
                 apps.append(app_entry)
                 print(f"[ok] {repo_dir.name}")
 
