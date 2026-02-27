@@ -21,11 +21,22 @@ g = Github(auth=Auth.Token(token))
 # -----------------------
 repos_data = []
 
-repositories = g.search_repositories(query='("react-native" in:readme OR topic:react-native) language:JavaScript language:TypeScript ',
+typescript_repositories = g.search_repositories(query='topic:react-native language:TypeScript',
     sort='updated'
 )
-print(f"{repositories.totalCount} Repositories found in total")
-for repo in repositories[:50]:
+javascript_repositories = g.search_repositories(query='topic:react-native language:JavaScript',
+    sort='updated'
+)
+merged = {}
+for repo in typescript_repositories:
+    merged[repo.full_name] = repo
+
+for repo in javascript_repositories:
+    merged[repo.full_name] = repo
+
+final_repos = list(merged.values())
+print(f"{final_repos.totalCount} Repositories found in total")
+for repo in final_repos[:50]:
     print(f"[scan] {repo.full_name}")
 
     buildable = False
