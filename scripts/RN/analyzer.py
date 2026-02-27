@@ -125,7 +125,7 @@ def analyze():
 
             try:
 
-                node_version = extract_node_version(package_path)
+                node_version = extract_node_version(base_dir)
                 buildability = analyze_react_native_buildability(base_dir)
                 if buildability is None:
                     raise Exception

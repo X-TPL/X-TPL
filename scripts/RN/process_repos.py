@@ -25,7 +25,7 @@ for repo in repos:
     print(f"[download] {repo['full_name']}")
 
     response = requests.get(repo["zip_url"], stream=True)
-    print(response.status_code)
+    response.raise_for_status()
 
     with open(zip_path, "wb") as f:
         for chunk in response.iter_content(chunk_size=8192):
