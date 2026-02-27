@@ -25,7 +25,7 @@ repositories = g.search_repositories(query='("react-native" in:readme OR topic:r
     sort='updated'
 )
 print(f"{repositories.totalCount} Repositories found in total")
-for repo in repositories:
+for repo in repositories[:50]:
     print(f"[scan] {repo.full_name}")
 
     buildable = False
