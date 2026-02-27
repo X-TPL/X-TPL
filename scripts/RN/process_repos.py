@@ -3,6 +3,7 @@ import requests
 from zipfile import ZipFile
 from pathlib import Path
 from dotenv import load_dotenv
+import os
 
 STORAGE_ROOT = Path("/home/ubuntu/storage/rn_assets")
 EXTRACT_ROOT = STORAGE_ROOT / "extracted"
