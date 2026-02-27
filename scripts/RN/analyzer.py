@@ -40,15 +40,7 @@ def analyze_react_native_buildability(repo_root: Path) -> Dict:
     Analyze a repository and determine whether it is:
         - buildable with Gradle (bare React Native)
         - buildable with Expo
-        - not buildable
-
-    Returns:
-        {
-            "type": "gradle" | "expo" | None,
-            "project_path": Path or None,
-            "reason": str
-        }
-    """
+        - not buildable"""
 
     def load_package_json(path: Path):
         try:
@@ -103,25 +95,16 @@ def analyze_react_native_buildability(repo_root: Path) -> Dict:
         gradlew_path = pkg_dir / "android" / "gradlew"
 
         if has_rn and gradlew_path.exists():
-            return {
-                "type": "gradle",
-                "project_path": pkg_dir,
-            }
+            return "gradle"
 
         # ---- Expo Build Detection ----
         app_json = pkg_dir / "app.json"
         app_config_js = pkg_dir / "app.config.js"
 
         if has_expo and (app_json.exists() or app_config_js.exists()):
-            return {
-                "type": "expo",
-                "project_path": pkg_dir,
-            }
+            return "expo"
 
-    return {
-        "type": None,
-        "project_path": None,
-    }
+    return None
 
 # -------------------------
 # Analyzer
@@ -144,14 +127,14 @@ def analyze():
 
                 node_version = extract_node_version(package_path)
                 buildability = analyze_react_native_buildability(base_dir)
-                if buildability["type"] is None:
+                if buildability is None:
                     raise Exception
                 
                 app_entry = {
                     "id": repo_dir.name if len(packages) == 1 else f"{repo_dir.name}-{counter}",
                     "path": normalize_path(base_dir),
                     "node": node_version,
-                    "type": buildability["type"],
+                    "type": buildability,
                     "output": "apk"
                 }
                 counter += 1
