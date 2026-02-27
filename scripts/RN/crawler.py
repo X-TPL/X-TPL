@@ -27,6 +27,7 @@ typescript_repositories = g.search_repositories(query='topic:react-native langua
 javascript_repositories = g.search_repositories(query='topic:react-native language:JavaScript',
     sort='updated'
 )
+"""
 merged = {}
 for repo in typescript_repositories:
     merged[repo.full_name] = repo
@@ -35,8 +36,9 @@ for repo in javascript_repositories:
     merged[repo.full_name] = repo
 
 final_repos = list(merged.values())
-print(f"{final_repos.totalCount} Repositories found in total")
-for repo in final_repos[:50]:
+"""
+print(f"{javascript_repositories.totalCount} Repositories found in total")
+for repo in javascript_repositories[:50]:
     print(f"[scan] {repo.full_name}")
 
     buildable = False
