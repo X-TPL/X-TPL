@@ -2,12 +2,22 @@ import json
 import requests
 from zipfile import ZipFile
 from pathlib import Path
+from dotenv import load_dotenv
 
 STORAGE_ROOT = Path("/home/ubuntu/storage/rn_assets")
 EXTRACT_ROOT = STORAGE_ROOT / "extracted"
 
 STORAGE_ROOT.mkdir(parents=True, exist_ok=True)
 EXTRACT_ROOT.mkdir(parents=True, exist_ok=True)
+load_dotenv()
+token = os.getenv("TOKEN")
+
+session = requests.Session()
+session.headers.update({
+    "Authorization": f"Bearer {token}",
+    "Accept": "application/vnd.github+json",
+    "User-Agent": "repo-crawler"
+})
 
 # -----------------------
 # Load repo list
@@ -24,7 +34,7 @@ for repo in repos:
 
     print(f"[download] {repo['full_name']}")
 
-    response = requests.get(repo["zip_url"], stream=True)
+    response = session.get(repo["zip_url"], stream=True, timeout=60)
     response.raise_for_status()
 
     with open(zip_path, "wb") as f:
