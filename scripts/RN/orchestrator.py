@@ -45,6 +45,10 @@ def load_manifest():
     with open(ROOT / "build_manifest.yaml") as f:
         return yaml.safe_load(f)["apps"]
 
+def pick_next_node_version(node):
+    if node == "18": return "20"
+    elif node == "20": return "22"
+    return None
 
 
 # ---------- docker image handling ----------
@@ -105,73 +109,74 @@ def build_app(app):
     log_file = out_dir / "build.log"
     log_file.write_text("")
     jdk_version = 17
+    while node_version:
+        try:
+            run(
+                ["echo", f"Attempting build for {app_id} with Node {node_version} and jdk {jdk_version}"],
+                log_file,
+                check=False
+            )
 
-    try:
-        run(
-            ["echo", f"Attempting build for {app_id} with Node {node_version} and jdk {jdk_version}"],
-            log_file,
-            check=False
-        )
+            ensure_image(node_version)
 
-        ensure_image(node_version)
+            run([
+                "docker", "run", "--rm",
+                "-v", f"{app_path}:/app",
+                "-v", f"{out_dir}:/output",
+                "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
+                image_tag(node_version, jdk_version),
+                "bash", "-c",
+                f"""
+                set -e
 
-        run([
-            "docker", "run", "--rm",
-            "-v", f"{app_path}:/app",
-            "-v", f"{out_dir}:/output",
-            "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
-            image_tag(node_version, jdk_version),
-            "bash", "-c",
-            f"""
-            set -e
+                cd /app && \
 
-            cd /app && \
+                # ---- install deps (yarn or npm) ----
+                if [ -f yarn.lock ]; then
+                    yarn install --frozen-lockfile;
+                elif [ -f package-lock.json ]; then
+                    npm ci;
+                else
+                    npm install;
+                fi && \
 
-            # ---- install deps (yarn or npm) ----
-            if [ -f yarn.lock ]; then
-                yarn install --frozen-lockfile;
-            elif [ -f package-lock.json ]; then
-                npm ci;
-            else
-                npm install;
-            fi && \
+                # ---- detect expo ----
+                if grep -q '"expo"' package.json; then
+                    echo "Expo project detected";
+                    npx expo prebuild --platform android $CI=1 -y;
+                fi && \
 
-            # ---- detect expo ----
-            if grep -q '"expo"' package.json; then
-                echo "Expo project detected";
-                npx expo prebuild --platform android $CI=1 -y;
-            fi && \
+                cd android && \
+                
+                chmod +x gradlew && \
+                
+                # ---- clean gradle ----
+                (./gradlew clean || true) && \
 
-            cd android && \
-            
-            chmod +x gradlew && \
-            
-            # ---- clean gradle ----
-            (./gradlew clean || true) && \
+                # ---- build debug apk ----
+                ./gradlew assembleDebug --no-daemon && \
 
-            # ---- build debug apk ----
-            ./gradlew assembleDebug --no-daemon && \
+                # ---- copy output ----
+                cp app/build/outputs/apk/debug/*.apk /output/
+                """
+            ], log_file)
 
-            # ---- copy output ----
-            cp app/build/outputs/apk/debug/*.apk /output/
-            """
-        ], log_file)
+            run(
+                ["echo", f"Build succeeded with Node {node_version}"],
+                log_file,
+                check=False
+            )
 
-        run(
-            ["echo", f"Build succeeded with Node {node_version}"],
-            log_file,
-            check=False
-        )
+            print(f"[done] {app_id} ({node_version})")
+            return
 
-        print(f"[done] {app_id} ({node_version})")
-        return
-
-    except Exception as e:
-        run(
-            ["echo", f"Build failed with Node {node_version} and jdk version {jdk_version} with the following error: {e}"],
-            log_file,
-            check=False
-        )
+        except Exception as e:
+            run(
+                ["echo", f"Build failed with Node {node_version} and jdk version {jdk_version} with the following error: {e}"],
+                log_file,
+                check=False
+            )
+        node_version = pick_next_node_version(node_version)
 
 
 
