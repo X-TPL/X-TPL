@@ -63,7 +63,7 @@ def image_exists(tag: str) -> bool:
 
 
 def ensure_image(node_version: str):
-    jdk_version = pick_jdk(node_version)
+    jdk_version = 17
     tag = image_tag(node_version, jdk_version)
 
     if image_exists(tag):
