@@ -143,7 +143,7 @@ def build_app(app):
                 # ---- detect expo ----
                 if grep -q '"expo"' package.json; then
                     echo "Expo project detected";
-                    npx expo prebuild --platform android $CI=1 -y;
+                    npx expo prebuild --platform android $CI=1;
                 fi && \
 
                 cd android && \
