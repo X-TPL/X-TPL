@@ -9,8 +9,8 @@ ROOT = pathlib.Path(__file__).parent.resolve()
 OUTPUT_DIR = ROOT / "output"
 DOCKERFILE_DIR = ROOT
 GLOBAL_LOG = OUTPUT_DIR / "build.log"
-IMAGE_PREFIX = "flutter-android"
-BUILD_LOCKS = {}  # (flutter_version, jdk_version) -> Lock
+IMAGE_PREFIX = "react-android"
+BUILD_LOCKS = {}  # (node_version , jdk_version) -> Lock
 GLOBAL_LOCK = threading.Lock()
 
 
