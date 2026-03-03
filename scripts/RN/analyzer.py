@@ -145,7 +145,7 @@ def analyze():
         subdirs = [d for d in repo_dir.iterdir() if d.is_dir()]
         dir = None
         if len(subdirs) == 1:
-            dir = subdirs[0]  # override to point to real repo
+            dir = subdirs[0] 
         
         candidates = []
         for dirpath, dirnames, filenames in os.walk(dir):
