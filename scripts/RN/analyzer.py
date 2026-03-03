@@ -147,12 +147,14 @@ def analyze():
         if len(subdirs) == 1:
             dir = subdirs[0]  # override to point to real repo
         
-        candidates = [dir / "package.json"]
-        packages_dir = dir / "packages"
-        if packages_dir.exists():
-            for sub in packages_dir.iterdir():
-                if (sub / "package.json").exists():
-                    candidates.append(sub / "package.json")
+        candidates = []
+        for dirpath, dirnames, filenames in os.walk(dir):
+            # Skip node_modules entirely
+            if "node_modules" in dirnames:
+                dirnames.remove("node_modules")  # prevents os.walk from descending
+
+            if "package.json" in filenames:
+                candidates.append(Path(dirpath) / "package.json")
         counter = 0
         for package_path in candidates:
             base_dir = package_path.parent
