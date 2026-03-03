@@ -28,7 +28,7 @@ def run(cmd, log_file: pathlib.Path, check=True):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                timeout=1800
+                timeout=7200
             )
         except subprocess.TimeoutExpired as e:
             f.write("\nERROR: Command timed out\n")
