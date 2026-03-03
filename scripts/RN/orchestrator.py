@@ -141,7 +141,9 @@ def build_app(app):
             fi && \
 
             cd android && \
-
+            
+            chmod +x gradlew && \
+            
             # ---- clean gradle ----
             (./gradlew clean || true) && \
 
