@@ -1,6 +1,7 @@
 import json
 import yaml
 from pathlib import Path
+import re
 
 from typing import Dict, List
 
@@ -15,24 +16,42 @@ def normalize_path(path: Path) -> str:
     return str(path.as_posix())
 
 
+def _normalize_node_version(version_str: str) -> str:
+    """
+    Extract first numeric major version from:
+    '>=16'
+    '^18.17.0'
+    '>=20.17.0 || >=22.9.0'
+    '18.x'
+    'v20'
+    """
+    if not version_str:
+        return "18"
+
+    match = re.search(r"\d+", version_str)
+    if match:
+        return match.group()
+
+    return "18"
+
 
 def extract_node_version(project_dir) -> str:
     data = json.loads((project_dir / "package.json").read_text())
 
-    # 1. Volta
+    # 1️⃣ Volta (most reliable)
     if "volta" in data and "node" in data["volta"]:
-        return data["volta"]["node"]
+        return _normalize_node_version(data["volta"]["node"])
 
-    # 2. engines
+    # 2️⃣ engines
     if "engines" in data and "node" in data["engines"]:
-        return data["engines"]["node"]
+        return _normalize_node_version(data["engines"]["node"])
 
-    # 3. .nvmrc
+    # 3️⃣ .nvmrc
     nvmrc = project_dir / ".nvmrc"
     if nvmrc.exists():
-        return nvmrc.read_text().strip()
+        return _normalize_node_version(nvmrc.read_text().strip())
 
-    return "18"  # default
+    return "18"  # safe default
 
 
 def analyze_react_native_buildability(repo_root: Path) -> Dict:
@@ -128,7 +147,7 @@ def analyze():
                 node_version = extract_node_version(base_dir)
                 buildability = analyze_react_native_buildability(base_dir)
                 if buildability is None:
-                    raise Exception
+                    raise Exception("not buildable")
                 
                 app_entry = {
                     "id": repo_dir.name if len(packages) == 1 else f"{repo_dir.name}-{counter}",
