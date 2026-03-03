@@ -142,9 +142,14 @@ def analyze():
         if not repo_dir.is_dir():
             continue
 
-        packages = list(repo_dir.rglob("package.json"))
+        candidates = [repo_dir / "package.json"]
+        packages_dir = repo_dir / "packages"
+        if packages_dir.exists():
+            for sub in packages_dir.iterdir():
+                if (sub / "package.json").exists():
+                    candidates.append(sub / "package.json")
         counter = 0
-        for package_path in packages:
+        for package_path in candidates:
             base_dir = package_path.parent
 
             try:
@@ -155,7 +160,7 @@ def analyze():
                     raise Exception("not buildable")
                 
                 app_entry = {
-                    "id": repo_dir.name if len(packages) == 1 else f"{repo_dir.name}-{counter}",
+                    "id": repo_dir.name if len(candidates) == 1 else f"{repo_dir.name}-{counter}",
                     "path": normalize_path(base_dir),
                     "node": node_version,
                     "type": buildability,
