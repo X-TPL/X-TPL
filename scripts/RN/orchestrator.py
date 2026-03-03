@@ -46,7 +46,8 @@ def load_manifest():
         return yaml.safe_load(f)["apps"]
 
 def pick_next_node_version(node):
-    if node == "18": return "20"
+    if node == "16": return "18"
+    elif node == "18": return "20"
     elif node == "20": return "22"
     return None
 
