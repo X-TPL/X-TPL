@@ -130,8 +130,10 @@ def build_app(app):
             # ---- install deps (yarn or npm) ----
             if [ -f yarn.lock ]; then
                 yarn install --frozen-lockfile;
+            elif [ -f package-lock.json ]; then
+                npm ci;
             else
-                npm ci || npm install;
+                npm install;
             fi && \
 
             # ---- detect expo ----
