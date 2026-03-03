@@ -88,7 +88,7 @@ def analyze_react_native_buildability(repo_root: Path) -> Dict:
     # Find all package.json files except inside node_modules
     package_files = [
         p for p in repo_root.rglob("package.json")
-        if not p.relative_to(repo_root).match("**/node_modules/**")
+        if not p.relative_to(repo_root).full_match("**/node_modules/**")
     ]
 
     for pkg_file in package_files:
