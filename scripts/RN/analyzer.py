@@ -143,11 +143,12 @@ def analyze():
             continue
 
         subdirs = [d for d in repo_dir.iterdir() if d.is_dir()]
+        dir = None
         if len(subdirs) == 1:
-            repo_dir = subdirs[0]  # override to point to real repo
+            dir = subdirs[0]  # override to point to real repo
         
-        candidates = [repo_dir / "package.json"]
-        packages_dir = repo_dir / "packages"
+        candidates = [dir / "package.json"]
+        packages_dir = dir / "packages"
         if packages_dir.exists():
             for sub in packages_dir.iterdir():
                 if (sub / "package.json").exists():
