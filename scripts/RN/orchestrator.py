@@ -46,17 +46,6 @@ def load_manifest():
         return yaml.safe_load(f)["apps"]
 
 
-# ---------- JDK selection logic ----------
-
-def pick_jdk(flutter_version: str) -> int:
-    major, minor, *_ = map(int, flutter_version.split("."))
-
-    # Flutter 3.16+ typically requires newer AGP -> JDK 17
-    if major > 3 or (major == 3 and minor >= 16):
-        return 17
-
-    return 11
-
 
 # ---------- docker image handling ----------
 
@@ -115,7 +104,7 @@ def build_app(app):
 
     log_file = out_dir / "build.log"
     log_file.write_text("")
-    jdk_version = pick_jdk(node_version)
+    jdk_version = 17
 
     try:
         run(
