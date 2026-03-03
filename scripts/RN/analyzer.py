@@ -2,6 +2,7 @@ import json
 import yaml
 from pathlib import Path
 import re
+import os
 
 from typing import Dict, List
 
@@ -86,10 +87,14 @@ def analyze_react_native_buildability(repo_root: Path) -> Dict:
         return False
 
     # Find all package.json files except inside node_modules
-    package_files: List[Path] = [
-        p for p in repo_root.rglob("package.json")
-        if "node_modules" not in str(p)
-    ]
+    package_files : List[Path] = []
+    for dirpath, dirnames, filenames in os.walk(repo_root):
+        # Skip node_modules entirely
+        if "node_modules" in dirnames:
+            dirnames.remove("node_modules")  # prevents os.walk from descending
+
+        if "package.json" in filenames:
+            package_files.append(Path(dirpath) / "package.json")
 
     for pkg_file in package_files:
         pkg_dir = pkg_file.parent
