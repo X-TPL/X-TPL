@@ -31,7 +31,7 @@ def _normalize_node_version(version_str: str) -> str:
 
     match = re.search(r"\d+", version_str)
     if match:
-        return match.group()
+        return match.group() if int(match.group()) >= 16 else "16"
 
     return "18"
 
