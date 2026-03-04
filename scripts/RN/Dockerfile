@@ -35,7 +35,8 @@ RUN java -version
 # ---------- install node ----------
 RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - && \
     apt-get update && apt-get install -y nodejs && \
-    npm install --global yarn && \
+    npm install -g corepack@latest && \
+    corepack enable && \
     rm -rf /var/lib/apt/lists/*
 
 RUN node -v && npm -v && yarn -v
