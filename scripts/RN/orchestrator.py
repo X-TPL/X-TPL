@@ -109,7 +109,7 @@ def build_app(app):
 
     log_file = out_dir / "build.log"
     log_file.write_text("")
-    jdk_version = 17
+    jdk_version = app["jdk"]
     while node_version:
         try:
             run(

@@ -54,6 +54,38 @@ def extract_node_version(project_dir) -> str:
 
     return "18"  # safe default
 
+def extract_gradle_version(project_path: Path) -> str | None:
+    wrapper_file = project_path / "android" / "gradle" / "wrapper" / "gradle-wrapper.properties"
+
+    if not wrapper_file.exists():
+        return None
+
+    content = wrapper_file.read_text(encoding="utf-8")
+
+    match = re.search(r"gradle-(\d+\.\d+(?:\.\d+)?)", content)
+    if match:
+        return match.group(1)
+
+    return None
+def predict_jdk_from_gradle(gradle_version: str | None) -> int:
+    if not gradle_version:
+        return 17  # safe modern default
+
+    major = int(gradle_version.split(".")[0])
+    minor = int(gradle_version.split(".")[1])
+
+    if major <= 6:
+        return 8
+
+    if major == 7:
+        if minor <= 2:
+            return 11
+        return 17
+
+    if major >= 8:
+        return 17
+
+    return 17
 
 def analyze_react_native_buildability(repo_root: Path) -> Dict:
     """
@@ -83,6 +115,36 @@ def analyze_react_native_buildability(repo_root: Path) -> Dict:
         # library pattern: peerDep but not dependency
         if has_rn_peer and not has_rn_dep:
             return True
+
+        return False
+    def expo_has_android_package(pkg_dir: Path) -> bool:
+        app_json = pkg_dir / "app.json"
+        app_config_js = pkg_dir / "app.config.js"
+
+        # ---- Case 1: app.json ----
+        if app_json.exists():
+            try:
+                data = json.loads(app_json.read_text(encoding="utf-8"))
+
+                # Expo config can be nested under "expo"
+                expo_config = data.get("expo", data)
+
+                android = expo_config.get("android", {})
+                if isinstance(android, dict) and android.get("package"):
+                    return True
+            except Exception:
+                return False
+
+        # ---- Case 2: app.config.js ----
+        if app_config_js.exists():
+            try:
+                content = app_config_js.read_text(encoding="utf-8")
+
+                # Simple heuristic: check for android.package string
+                if re.search(r"android\s*:\s*{[^}]*package\s*:", content, re.DOTALL):
+                    return True
+            except Exception:
+                return False
 
         return False
 
@@ -115,19 +177,22 @@ def analyze_react_native_buildability(repo_root: Path) -> Dict:
         has_rn = "react-native" in deps
         has_expo = "expo" in deps
 
-        # ---- Gradle Build Detection ----
-        gradlew_path = pkg_dir / "android" / "gradlew"
+        # Must have native android folder
+        android_dir = pkg_dir / "android"
 
+        if not android_dir.exists():
+            return None  # strictly require native android project
+
+        gradlew_path = android_dir / "gradlew"
+
+        # ---- Gradle Build Detection ----
         if has_rn and gradlew_path.exists():
             return "gradle"
 
         # ---- Expo Build Detection ----
-        app_json = pkg_dir / "app.json"
-        app_config_js = pkg_dir / "app.config.js"
-
-        if has_expo and (app_json.exists() or app_config_js.exists()):
+        if has_expo and expo_has_android_package(pkg_dir):
             return "expo"
-
+    
     return None
 
 # -------------------------
@@ -163,6 +228,8 @@ def analyze():
 
                 node_version = extract_node_version(base_dir)
                 buildability = analyze_react_native_buildability(base_dir)
+                gradle_version = extract_gradle_version(base_dir)
+                jdk_version = predict_jdk_from_gradle(gradle_version)
                 if buildability is None:
                     raise Exception("not buildable")
                 
@@ -171,6 +238,7 @@ def analyze():
                     "path": normalize_path(base_dir),
                     "node": node_version,
                     "type": buildability,
+                    "jdk": jdk_version, 
                     "output": "apk"
                 }
                 counter += 1
