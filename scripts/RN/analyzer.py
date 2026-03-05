@@ -75,7 +75,7 @@ def predict_jdk_from_gradle(gradle_version: str | None) -> int:
     minor = int(gradle_version.split(".")[1])
 
     if major <= 6:
-        return 11 # should be 8 but 8 is old af
+        return 8
 
     if major == 7:
         if minor <= 2:

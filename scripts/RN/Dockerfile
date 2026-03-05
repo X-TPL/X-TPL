@@ -44,7 +44,9 @@ RUN node -v && npm -v && yarn -v
 
 # ---------- android sdk ----------
 RUN mkdir -p $ANDROID_HOME/cmdline-tools && \
-    if [ "$JDK_VERSION" = "11" ]; then \
+    if [ "$JDK_VERSION" = "8" ]; then \
+        SDK_VERSION=8512546; \
+    elif [ "$JDK_VERSION" = "11" ]; then \
         SDK_VERSION=9477386; \
     else \
         SDK_VERSION=11076708; \
