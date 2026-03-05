@@ -30,6 +30,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # ---------- verify java ----------
+ENV JAVA_HOME=/usr/lib/jvm/java-${JDK_VERSION}-openjdk-amd64
+ENV PATH="$JAVA_HOME/bin:$PATH"
 RUN java -version
 
 # ---------- install node ----------
@@ -66,7 +68,7 @@ ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false -Xmx4g"
 ENV ORG_GRADLE_PROJECT_org.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g -Dkotlin.daemon.jvm.options=-Xmx2g"
 
 # ---------- optional: expo cli ----------
-RUN npm install -g expo-cli
+RUN npx expo
 
 # ---------- workdir ----------
 WORKDIR /app
