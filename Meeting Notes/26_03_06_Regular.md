@@ -6,3 +6,4 @@
 
 ## RN
 - Dependency Resolution forcieren?
+- Frozen lockfile wichtig?
