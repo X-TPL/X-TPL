@@ -3,7 +3,6 @@ FROM ubuntu:22.04
 
 # ---------- build args ----------
 ARG NODE_VERSION=18
-ARG ANDROID_SDK_VERSION=11076708
 ARG JDK_VERSION=17
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -44,11 +43,16 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - && \
 RUN node -v && npm -v && yarn -v
 
 # ---------- android sdk ----------
-RUN mkdir -p $ANDROID_HOME/cmdline-tools
-
-RUN curl -4 -fsSL \
-    https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_SDK_VERSION}_latest.zip \
-    -o /tmp/cmdline-tools.zip && \
+RUN mkdir -p $ANDROID_HOME/cmdline-tools && \
+    if [ "$JDK_VERSION" = "11" ]; then \
+        SDK_VERSION=9477386; \
+    else \
+        SDK_VERSION=11076708; \
+    fi && \
+    echo "Using Android cmdline-tools $SDK_VERSION for JDK $JDK_VERSION" && \
+    curl -4 -fsSL \
+      https://dl.google.com/android/repository/commandlinetools-linux-${SDK_VERSION}_latest.zip \
+      -o /tmp/cmdline-tools.zip && \
     unzip /tmp/cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools && \
     mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest && \
     rm /tmp/cmdline-tools.zip
@@ -68,7 +72,7 @@ ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false -Xmx4g"
 ENV ORG_GRADLE_PROJECT_org.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g -Dkotlin.daemon.jvm.options=-Xmx2g"
 
 # ---------- optional: expo cli ----------
-RUN npx expo
+RUN npm install -g expo
 
 # ---------- workdir ----------
 WORKDIR /app
