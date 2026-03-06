@@ -165,11 +165,8 @@ def analyze_react_native_buildability(pkg_dir: Path) -> str | None:
     android_dir = pkg_dir / "android"
     gradlew_path = android_dir / "gradlew"
 
-    if not android_dir.exists():
-        print("[info] No android folder")
-        return None
     # ---- Gradle project ----
-    if has_rn and gradlew_path.exists():
+    if has_rn and android_dir.exists() and gradlew_path.exists():
         return "gradle"
 
     # ---- Expo project ----
