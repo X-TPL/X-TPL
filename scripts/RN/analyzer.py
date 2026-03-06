@@ -145,6 +145,7 @@ def analyze_react_native_buildability(pkg_dir: Path) -> str | None:
     try:
         pkg_data = json.loads(pkg_file.read_text(encoding="utf-8"))
     except Exception:
+        print("[info] failed to load package.json")
         return None
 
     deps = {
@@ -155,6 +156,7 @@ def analyze_react_native_buildability(pkg_dir: Path) -> str | None:
     # ---- library detection ----
     peer_deps = pkg_data.get("peerDependencies", {})
     if "react-native" in peer_deps and "react-native" not in deps:
+        print("[info] Repo is library")
         return None
 
     has_rn = "react-native" in deps
@@ -164,6 +166,7 @@ def analyze_react_native_buildability(pkg_dir: Path) -> str | None:
     gradlew_path = android_dir / "gradlew"
 
     if not android_dir.exists():
+        print("[info] No android folder")
         return None
     # ---- Gradle project ----
     if has_rn and gradlew_path.exists():
