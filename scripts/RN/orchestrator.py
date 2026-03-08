@@ -133,11 +133,11 @@ def build_app(app):
 
                 # ---- install deps (yarn or npm) ----
                 if [ -f yarn.lock ]; then
-                    yarn install; #--frozen-lockfile
+                    yarn install;
                 # elif [ -f package-lock.json ]; then
-                #    npm ci;
+                #    npm ci --legacy-peer-deps;
                 else
-                    npm install;
+                    npm install --legacy-peer-deps;
                 fi && \
 
                 # ---- detect expo ----
