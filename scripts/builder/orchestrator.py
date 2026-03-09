@@ -255,8 +255,8 @@ def build_app(app):
                 fi && \
                 flutter build {output_type} --release --no-pub --split-per-abi && \
                 cp build/app/outputs/flutter-apk/*.apk /output/r8/ && \
-                cp .dart_tool/package_config.json /output/ && \
-                cp pubspec.lock /output/
+                cp .dart_tool/package_config.json /output/r8/ && \
+                cp pubspec.lock /output/r8/
                 """
             ], log_file)
             run([ # Flutter obfuscation
@@ -275,10 +275,10 @@ def build_app(app):
                 if grep -R "part '.*\\.g\\.dart'" lib >/dev/null 2>&1; then \
                     flutter pub run build_runner build --delete-conflicting-outputs || true; \
                 fi && \
-                flutter build {output_type} --release --obfuscate --split-debug-info=/ --no-pub --split-per-abi && \
+                flutter build {output_type} --release --obfuscate --split-debug-info=/output/obfuscated/ --no-pub --split-per-abi && \
                 cp build/app/outputs/flutter-apk/*.apk /output/obfuscated/ && \
                 cp .dart_tool/package_config.json /output/obfuscated/ && \
-                cp pubspec.lock /output/
+                cp pubspec.lock /output/obfuscated/
                 """
             ], log_file)
 
