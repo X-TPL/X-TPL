@@ -137,7 +137,7 @@ def build_app(app):
                 # elif [ -f package-lock.json ]; then
                 #    npm ci --legacy-peer-deps;
                 else
-                    npm install --legacy-peer-deps;
+                    npm install;
                 fi && \
 
                 # ---- detect expo ----
