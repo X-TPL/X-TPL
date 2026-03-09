@@ -228,9 +228,53 @@ def build_app(app):
                 if grep -R "part '.*\\.g\\.dart'" lib >/dev/null 2>&1; then \
                     flutter pub run build_runner build --delete-conflicting-outputs || true; \
                 fi && \
-                flutter build {output_type} --debug --no-pub && \
+                flutter build {output_type} --debug --no-pub --split-per-abi && \
                 cp build/app/outputs/flutter-apk/*.apk /output/ && \
                 cp .dart_tool/package_config.json /output/ && \
+                cp pubspec.lock /output/
+                """
+            ], log_file)
+            run([ # R8 obfuscation
+                "docker", "run", "--rm",
+                "-v", f"{app_path}:/app",
+                "-v", f"{out_dir}:/output",
+                "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
+                image_tag(flutter_version, jdk_version),
+                "bash", "-c",
+                f"""
+                cd /app && \
+                {assets} && \
+                flutter clean && \
+                flutter pub get && \
+                (./gradlew clean || true) && \
+                if grep -R "part '.*\\.g\\.dart'" lib >/dev/null 2>&1; then \
+                    flutter pub run build_runner build --delete-conflicting-outputs || true; \
+                fi && \
+                flutter build {output_type} --release --no-pub --split-per-abi && \
+                cp build/app/outputs/flutter-apk/*.apk /output/r8/ && \
+                cp .dart_tool/package_config.json /output/ && \
+                cp pubspec.lock /output/
+                """
+            ], log_file)
+            run([ # Flutter obfuscation
+                "docker", "run", "--rm",
+                "-v", f"{app_path}:/app",
+                "-v", f"{out_dir}:/output",
+                "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
+                image_tag(flutter_version, jdk_version),
+                "bash", "-c",
+                f"""
+                cd /app && \
+                {assets} && \
+                flutter clean && \
+                flutter pub get && \
+                (./gradlew clean || true) && \
+                if grep -R "part '.*\\.g\\.dart'" lib >/dev/null 2>&1; then \
+                    flutter pub run build_runner build --delete-conflicting-outputs || true; \
+                fi && \
+                flutter build {output_type} --release --obfuscate --split-debug-info=/ --no-pub --split-per-abi && \
+                cp build/app/outputs/flutter-apk/*.apk /output/obfuscated/ && \
+                cp .dart_tool/package_config.json /output/obfuscated/ && \
                 cp pubspec.lock /output/
                 """
             ], log_file)
