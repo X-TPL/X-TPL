@@ -194,7 +194,10 @@ def build_app(app):
 
     out_dir = OUTPUT_DIR / app_id
     out_dir.mkdir(parents=True, exist_ok=True)
-
+    r8_dir = out_dir / "r8"
+    r8_dir.mkdir(parents=True, exist_ok=True)
+    obfus_dir = out_dir / "obfuscated"
+    obfus_dir.mkdir(parents=True, exist_ok=True)
     log_file = out_dir / "build.log"
     log_file.write_text("")
     missing_assets = get_missing_assets(app_path)
