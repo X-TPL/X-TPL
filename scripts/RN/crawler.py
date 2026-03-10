@@ -37,8 +37,8 @@ for repo in javascript_repositories:
 
 final_repos = list(merged.values())
 """
-print(f"{javascript_repositories.totalCount} Repositories found in total")
-for repo in javascript_repositories:
+print(f"{typescript_repositories.totalCount} Repositories found in total")
+for repo in typescript_repositories:
     print(f"[scan] {repo.full_name}")
 
     buildable = False
