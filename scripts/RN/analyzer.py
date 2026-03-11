@@ -4,8 +4,6 @@ from pathlib import Path
 import re
 import os
 
-from typing import Dict, List
-
 EXTRACT_ROOT = Path("/home/ubuntu/storage/rn_assets/extracted")
 OUTPUT_FILE = "build_manifest.yaml"
 
@@ -86,24 +84,6 @@ def predict_jdk_from_gradle(gradle_version: str | None) -> int:
         return 17
 
     return 17
-    
-def is_library(pkg_data: dict) -> bool:
-    """
-    Detect common RN library patterns:
-    - react-native only in peerDependencies
-    - no android/ and no expo config
-    """
-    deps = pkg_data.get("dependencies", {})
-    peer_deps = pkg_data.get("peerDependencies", {})
-
-    has_rn_dep = "react-native" in deps
-    has_rn_peer = "react-native" in peer_deps
-
-    # library pattern: peerDep but not dependency
-    if has_rn_peer and not has_rn_dep:
-        return True
-
-    return False
 
 def expo_has_android_package(pkg_dir: Path) -> bool:
     app_json = pkg_dir / "app.json"
