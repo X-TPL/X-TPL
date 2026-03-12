@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y \
     zip \
     libglu1-mesa \
     ca-certificates \
+    gradle \
     openjdk-${JDK_VERSION}-jdk \
     && rm -rf /var/lib/apt/lists/*
 
