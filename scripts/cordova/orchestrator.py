@@ -42,10 +42,9 @@ def load_manifest():
         return yaml.safe_load(f)["apps"]
 
 
-def pick_next_node_version(node):
-    if node == "16": return "18"
-    elif node == "18": return "20"
-    elif node == "20": return "22"
+def pick_next_jdk_version(jdk):
+    if jdk == "8": return "11"
+    elif jdk == "11": return "17"
     return None
 
 
@@ -94,7 +93,7 @@ def ensure_image(node_version: str, jdk_version: str):
 
 def build_app(app):
     app_id = app["id"]
-    node_version = app["node"]
+    node_version = 20 #app["node"]
     app_path = ROOT / app["path"]
     jdk_version = app["jdk"]
 
@@ -103,7 +102,7 @@ def build_app(app):
     log_file = out_dir / "build.log"
     log_file.write_text("")
 
-    while node_version:
+    while jdk_version:
         try:
             run(
                 ["echo", f"Attempting build for {app_id} with Node {node_version} and JDK {jdk_version}"],
@@ -161,7 +160,7 @@ def build_app(app):
                 check=False
             )
 
-        node_version = pick_next_node_version(node_version)
+        jdk_version = pick_next_jdk_version(jdk_version)
 
 
 # ---------- main ----------

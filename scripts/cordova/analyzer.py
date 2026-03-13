@@ -96,12 +96,12 @@ def get_required_jdk(pkg_dir: Path) -> int | None:
                 pass
 
     if cordova_android_version is None:
-        return 17
+        return 8
 
     # Extract major version
     match = re.search(r"\d+", cordova_android_version)
     if not match:
-        return 17
+        return 8
 
     major = int(match.group())
 
