@@ -135,9 +135,20 @@ def build_app(app):
 
                 # ---- ensure android platform ----
                 npx cordova platform add android --no-update || true
+                
+                npx cordova prepare android
+                
+                
+                # ---- fix common gradle issues ----
+                sed -i 's/--illegal-access=permit//g' platforms/android/gradle.properties || true
 
-                # ---- build debug APK ----
-                npx cordova build android --debug --no-interactive
+                cd platforms/android
+
+                chmod +x gradlew
+
+                ./gradlew clean
+
+                ./gradlew assembleDebug --no-daemon
 
                 # ---- copy output APKs ----
                 cp platforms/android/app/build/outputs/apk/debug/*.apk /output/
