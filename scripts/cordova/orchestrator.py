@@ -43,8 +43,8 @@ def load_manifest():
 
 
 def pick_next_jdk_version(jdk):
-    if jdk == "8": return "11"
-    elif jdk == "11": return "17"
+    if jdk == 8: return 11
+    elif jdk == 11: return 17
     return None
 
 
