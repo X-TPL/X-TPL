@@ -145,7 +145,8 @@ def has_bad_dependency(pubspec_data: dict) -> bool:
 
 def analyze():
     apps = []
-
+    duplicated_repos = 0
+    total_repos = 0
     for repo_dir in EXTRACT_ROOT.iterdir():
         if not repo_dir.is_dir():
             continue
@@ -186,6 +187,9 @@ def analyze():
 
             except Exception as e:
                 print(f"[skip] {repo_dir.name}: {e}")
+        if counter > 0:
+            duplicated_repos += 1
+            total_repos += counter
 
     manifest = {"apps": apps}
 
@@ -198,6 +202,8 @@ def analyze():
         )
 
     print(f"\nGenerated {len(apps)} build entries.")
+    print(f"\n{duplicated_repos} had multiple build entries")
+    print(f"\n{total_repos} build entries originate from duplicated repos")
 
 
 if __name__ == "__main__":
