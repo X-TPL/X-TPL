@@ -123,35 +123,40 @@ def build_app(app):
                 set -e
 
                 cd /app
-
+                rm -rf platforms plugins node_modules || true
                 # ---- install dependencies ----
                 if [ -f yarn.lock ]; then
                     yarn install;
                 elif [ -f package-lock.json ]; then
-                    npm ci --legacy-peer-deps;
+                    npm ci;
                 else
                     npm install;
                 fi
 
                 # ---- ensure android platform ----
-                npx cordova platform add android --no-update || true
+                npx cordova platform add android
                 
                 npx cordova prepare android
                 
                 
                 # ---- fix common gradle issues ----
-                sed -i 's/--illegal-access=permit//g' platforms/android/gradle.properties || true
+                find platforms/android -type f -exec sed -i 's/--illegal-access=permit//g' {{}} + || true
 
-                cd platforms/android
+                if npx cordova build android --debug --no-interactive; then
+                    echo "Cordova build succeeded"
+                else
+                    echo "Cordova build failed, trying Gradle fallback..."
 
-                chmod +x gradlew
+                    cd platforms/android
 
-                ./gradlew clean
+                    if [ ! -f gradlew ]; then
+                        echo "No gradlew found — cannot fallback"
+                        exit 1
+                    fi
 
-                ./gradlew assembleDebug --no-daemon
-
-                # ---- copy output APKs ----
-                cp platforms/android/app/build/outputs/apk/debug/*.apk /output/
+                    chmod +x gradlew
+                    ./gradlew assembleDebug --no-daemon
+                fi
                 """
             ], log_file)
 
