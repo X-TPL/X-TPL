@@ -124,6 +124,16 @@ def build_app(app):
 
                 cd /app
                 rm -rf platforms plugins node_modules || true
+                rm -rf $GRADLE_USER_HOME || true
+                mkdir -p $GRADLE_USER_HOME
+
+                # ---- clean project gradle ----
+                rm -rf ~/.gradle || true
+                rm -rf platforms/android/.gradle || true
+                
+                unset GRADLE_OPTS
+                unset JAVA_OPTS
+                unset ORG_GRADLE_PROJECT_org.gradle.jvmargs
                 # ---- install dependencies ----
                 if [ -f yarn.lock ]; then
                     yarn install;

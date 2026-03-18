@@ -9,7 +9,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 # ---------- env ----------
 ENV ANDROID_HOME=/opt/android
 ENV ANDROID_SDK_ROOT=/opt/android
-ENV GRADLE_USER_HOME=/opt/gradle
+ENV GRADLE_USER_HOME=/tmp/gradle
 ENV PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:/usr/local/bin:$PATH"
 
 RUN mkdir -p /opt/gradle
@@ -65,10 +65,6 @@ RUN $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
     "platform-tools" \
     "platforms;android-34" \
     "build-tools;34.0.0"
-
-# ---------- gradle stability ----------
-ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false -Xmx4g"
-ENV ORG_GRADLE_PROJECT_org.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g -Dkotlin.daemon.jvm.options=-Xmx2g"
 
 # ---------- workdir ----------
 WORKDIR /app
