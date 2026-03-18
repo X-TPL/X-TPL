@@ -187,7 +187,7 @@ def analyze():
 
             except Exception as e:
                 print(f"[skip] {repo_dir.name}: {e}")
-        if counter > 0:
+        if counter > 1:
             duplicated_repos += 1
             total_repos += counter
 
