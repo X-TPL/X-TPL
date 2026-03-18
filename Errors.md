@@ -73,3 +73,38 @@ firebase: The current Dart SDK version is 3.2.0.Because firebase_core >=4.4.0 de
 
 hiddify: Probably gradle Version => same => pinned version that doesnt work
 
+
+
+## failing Docker builds
+3.26 & 3.29 & 3.38
+
+## bad pubspecs
+vyuh-tech-vyuh: declares workspace but workspace doesnt exist
+trufi-association
+## wrong flutter versions
+
+mo7amedaliEbaid-flutter_webview_template
+PSDTools-app
+Dragon863-myrunshaw
+zapstore
+fahim
+
+## Tools
+
+To count apks: find . -name *.apk | wc -l
+To count directories: ls -l | grep -c ^d
+To count directories with apks: for d in */; do
+  find "$d" -name "*.apk" -print -quit | grep -q . && echo "$d"
+done | wc -l
+To find directories without apk: for d in */; do
+  ls "$d"*.apk >/dev/null 2>&1 || echo "$d"
+done
+## values
+
+25.02. 36/79
+26.02. 43/79
+
+Repos: 1020
+downloaded: 901
+entries: 897
+built: 470

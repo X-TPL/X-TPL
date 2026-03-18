@@ -21,3 +21,10 @@ Obfuscation and minification can considerably extend the compile time of an Andr
 
 The --[no-]shrink flag has no effect. Code shrinking is always enabled in release builds. To learn more, check out Shrink, obfuscate, and optimize your app.
 
+# Duplication
+
+Generated 944 build entries.
+
+12 Repos had multiple build entries
+
+87 build entries originate from duplicated repos
