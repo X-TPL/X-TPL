@@ -157,11 +157,12 @@ def build_app(app):
                     chmod +x gradlew
                     ./gradlew assembleDebug --no-daemon
                 fi
+                cp platforms/android/app/build/outputs/apk/debug/*.apk /output/
                 """
             ], log_file)
 
             run(
-                ["echo", f"Build succeeded with Node {node_version}"],
+                ["echo", f"Build succeeded with Node {node_version} and JDK {jdk_version}"],
                 log_file,
                 check=False
             )
