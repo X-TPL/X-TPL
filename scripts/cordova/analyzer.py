@@ -204,12 +204,13 @@ def analyze():
             continue
 
         subdirs = [d for d in repo_dir.iterdir() if d.is_dir()]
-        dir = None
         if len(subdirs) == 1:
-            dir = subdirs[0] 
+            root_dir = subdirs[0]
+        else:
+            root_dir = repo_dir
         
         candidates = []
-        for dirpath, dirnames, filenames in os.walk(dir):
+        for dirpath, dirnames, filenames in os.walk(root_dir):
             # Skip node_modules entirely
             if "node_modules" in dirnames:
                 dirnames.remove("node_modules")  # prevents os.walk from descending
