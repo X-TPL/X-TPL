@@ -23,7 +23,6 @@ RUN apt-get update && apt-get install -y \
     zip \
     libglu1-mesa \
     ca-certificates \
-    gradle \
     openjdk-${JDK_VERSION}-jdk \
     && rm -rf /var/lib/apt/lists/*
 
@@ -40,9 +39,11 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - && \
 
 RUN node -v && npm -v && yarn -v && cordova -v
 
-RUN mkdir -p /opt/gradle-template && \
-    cd /opt/gradle-template && \
-    gradle wrapper --gradle-version 8.13
+# ---------- install modern gradle ----------
+RUN curl -fsSL https://services.gradle.org/distributions/gradle-8.5-bin.zip -o gradle.zip && \
+    unzip gradle.zip -d /opt && \
+    ln -s /opt/gradle-8.5/bin/gradle /usr/bin/gradle && \
+    rm gradle.zip
 # ---------- android sdk ----------
 RUN mkdir -p $ANDROID_HOME/cmdline-tools && \
     if [ "$JDK_VERSION" = "8" ]; then \
