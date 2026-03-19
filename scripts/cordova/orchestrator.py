@@ -152,7 +152,7 @@ def build_app(app):
                 # ---- fix common gradle issues ----
                 find platforms/android -type f -exec sed -i 's/--illegal-access=permit//g' {{}} + || true
 
-                if npx cordova build android --debug --no-interactive; then
+                if npx cordova build android --debug --no-interactive --stacktrace; then
                     echo "Cordova build succeeded"
                 else
                     echo "Cordova build failed, trying Gradle fallback..."

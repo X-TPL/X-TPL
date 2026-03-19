@@ -66,5 +66,7 @@ RUN $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
     "platforms;android-34" \
     "build-tools;34.0.0"
 
+ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false"
+
 # ---------- workdir ----------
 WORKDIR /app
