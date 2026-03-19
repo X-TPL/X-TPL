@@ -40,10 +40,11 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - && \
 RUN node -v && npm -v && yarn -v && cordova -v
 
 # ---------- install modern gradle ----------
-RUN curl -fsSL https://services.gradle.org/distributions/gradle-8.13-bin.zip -o gradle.zip && \
-    unzip gradle.zip -d /opt && \
-    ln -s /opt/gradle-8.5/bin/gradle /usr/bin/gradle && \
-    rm gradle.zip
+RUN curl -s "https://get.sdkman.io?ci=true&rcupdate=false" | bash
+RUN source "/.sdkman/bin/sdkman-init.sh"
+RUN sdk install gradle 8.13
+
+RUN gradle -v
 # ---------- android sdk ----------
 RUN mkdir -p $ANDROID_HOME/cmdline-tools && \
     if [ "$JDK_VERSION" = "8" ]; then \
