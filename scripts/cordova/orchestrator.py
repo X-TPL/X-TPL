@@ -146,6 +146,12 @@ def build_app(app):
                 # ---- ensure android platform ----
                 npx cordova platform add android
                 
+                
+                # ---- inject gradle wrapper ----
+                cp -r /opt/gradle-template/* platforms/android/
+
+                chmod +x platforms/android/gradlew
+                
                 npx cordova prepare android
                 echo "android is prepared"
                 

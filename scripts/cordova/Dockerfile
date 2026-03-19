@@ -40,12 +40,8 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - && \
 
 RUN node -v && npm -v && yarn -v && cordova -v
 
-# install modern gradle manually
-RUN curl -fsSL https://services.gradle.org/distributions/gradle-8.5-bin.zip -o gradle.zip && \
-    unzip gradle.zip -d /opt && \
-    ln -s /opt/gradle-8.5/bin/gradle /usr/bin/gradle && \
-    rm gradle.zip
-
+RUN mkdir gradle-template
+RUN cd gradle-template && gradle wrapper --gradle-version 8.13
 # ---------- android sdk ----------
 RUN mkdir -p $ANDROID_HOME/cmdline-tools && \
     if [ "$JDK_VERSION" = "8" ]; then \
@@ -74,5 +70,6 @@ RUN $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
 
 ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false --stacktrace"
 
+COPY gradle-template /opt/gradle-template
 # ---------- workdir ----------
 WORKDIR /app
