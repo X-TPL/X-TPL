@@ -131,7 +131,7 @@ def build_app(app):
                 rm -rf ~/.gradle || true
                 rm -rf platforms/android/.gradle || true
                 
-                unset GRADLE_OPTS
+                #unset GRADLE_OPTS
                 unset JAVA_OPTS
                 unset ORG_GRADLE_PROJECT_org.gradle.jvmargs
                 # ---- install dependencies ----
