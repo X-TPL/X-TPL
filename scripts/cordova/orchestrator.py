@@ -147,12 +147,12 @@ def build_app(app):
                 npx cordova platform add android
                 
                 npx cordova prepare android
-                
+                echo "android is prepared"
                 
                 # ---- fix common gradle issues ----
                 find platforms/android -type f -exec sed -i 's/--illegal-access=permit//g' {{}} + || true
 
-                if npx cordova build android --debug --no-interactive -- --gradleArg="--stacktrace"; then
+                if npx cordova build android --debug --no-interactive --verbose; then
                     echo "Cordova build succeeded"
                 else
                     echo "Cordova build failed, trying Gradle fallback..."
@@ -165,7 +165,7 @@ def build_app(app):
                     fi
 
                     chmod +x gradlew
-                    ./gradlew assembleDebug --no-daemon
+                    ./gradlew assembleDebug --no-daemon --stacktrace
                 fi
                 cp platforms/android/app/build/outputs/apk/debug/*.apk /output/
                 """
