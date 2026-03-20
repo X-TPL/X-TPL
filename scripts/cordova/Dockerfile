@@ -41,8 +41,11 @@ RUN node -v && npm -v && yarn -v && cordova -v
 
 # ---------- install modern gradle ----------
 RUN curl -s "https://get.sdkman.io?ci=true&rcupdate=false" | bash
-RUN source "/.sdkman/bin/sdkman-init.sh"
-RUN sdk install gradle 8.13
+RUN bash -c " \
+    source /root/.sdkman/bin/sdkman-init.sh && \
+    sdk install gradle 8.5 && \
+    gradle -v \
+"
 
 RUN gradle -v
 # ---------- android sdk ----------
