@@ -44,7 +44,7 @@ RUN curl -s "https://get.sdkman.io?ci=true&rcupdate=false" | bash
 RUN bash -c " \
     source /root/.sdkman/bin/sdkman-init.sh && \
     sdk install gradle 8.5 && \
-    gradle -v \
+    ln -s /root/.sdkman/candidates/gradle/current/bin/gradle /usr/bin/gradle \
 "
 
 RUN gradle -v
