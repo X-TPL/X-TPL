@@ -111,7 +111,28 @@ def build_app(app):
             )
 
             ensure_image(node_version, jdk_version)
+            script = """
+            # ---- fix repositories globally ----
 
+            find platforms/android -type f -exec \
+                sed -i 's/jcenter()/mavenCentral()/g' {{}} \\; || true
+
+            find platforms/android -name "*.gradle" -exec \
+                sed -i 's/repositories[[:space:]]*{{[^}}]*}}/repositories {{ google(); mavenCentral() }}/g' {{}} \\; || true
+
+            # ---- isolate SDK for JDK 8 ----
+            if [ "{jdk_version}" = "8" ]; then
+                echo "Isolating SDK for JDK 8"
+
+                for v in 34 35 36; do
+                    mv "$ANDROID_HOME/platforms/android-$v" "$ANDROID_HOME/platforms/android-$v.disabled" 2>/dev/null || true
+                done
+
+                for v in 34.0.0 35.0.0 36.0.0; do
+                    mv "$ANDROID_HOME/build-tools/$v" "$ANDROID_HOME/build-tools/$v.disabled" 2>/dev/null || true
+                done
+            fi
+            """.format(jdk_version=jdk_version)
             run([
                 "docker", "run", "--rm",
                 "-v", f"{app_path}:/app",
@@ -147,21 +168,8 @@ def build_app(app):
                 
                 npx cordova prepare android
                 echo "android is prepared"
-                
-                # ---- fix deprecated repos ----
-                find platforms/android -name "*.gradle" -exec \
-                    sed -i 's/jcenter()/mavenCentral()/g' {{}} + || true
+                {script}
 
-                # ---- fix repositories globally ----
-
-                # remove jcenter everywhere
-                find platforms/android -type f -exec \
-                    sed -i 's/jcenter()/mavenCentral()/g' {{}} \; || true
-
-                # force repositories in all gradle files
-                find platforms/android -name "*.gradle" -exec \
-                    sed -i 's/repositories\s*{"{[^}]*}"}/repositories {{ google(); mavenCentral() }}/g' {{}} \; || true
-                    
                 if [ "{jdk_version}" = "8" ]; then
                     echo "Isolating SDK for JDK 8"
 
@@ -171,7 +179,16 @@ def build_app(app):
                         fi
                     done
                 fi
+                # hide build-tools as well (CRITICAL)
+                if [ "{jdk_version}" = "8" ]; then
+                    for v in 34.0.0 35.0.0 36.0.0; do
+                        if [ -d "$ANDROID_HOME/build-tools/$v" ]; then
+                            mv "$ANDROID_HOME/build-tools/$v" "$ANDROID_HOME/build-tools/$v.disabled" || true
+                        fi
+                    done
+                fi
                 echo "sdk.dir=$ANDROID_HOME" > platforms/android/local.properties
+                rm -rf $ANDROID_HOME/.android || true
                 # ---- fix common gradle issues ----
                 find platforms/android -type f -exec sed -i 's/--illegal-access=permit//g' {{}} + || true
 
