@@ -71,8 +71,12 @@ RUN yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 # ---------- install android packages ----------
 RUN $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
     "platform-tools" \
+    "platforms;android-33" \
     "platforms;android-34" \
-    "build-tools;34.0.0"
+    "platforms;android-35" \
+    "build-tools;33.0.2" \
+    "build-tools;34.0.0" \
+    "build-tools;35.0.0"
 
 ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false"
 
