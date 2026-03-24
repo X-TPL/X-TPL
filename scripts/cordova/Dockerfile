@@ -45,22 +45,22 @@ RUN bash -c " \
     source /root/.sdkman/bin/sdkman-init.sh && \
     sdk install gradle 8.5 && \
     ln -s /root/.sdkman/candidates/gradle/current/bin/gradle /usr/bin/gradle \
-"
+    "
 
 RUN gradle -v
 # ---------- android sdk ----------
 RUN mkdir -p $ANDROID_HOME/cmdline-tools && \
     if [ "$JDK_VERSION" = "8" ]; then \
-        SDK_VERSION=8512546; \
+    SDK_VERSION=8512546; \
     elif [ "$JDK_VERSION" = "11" ]; then \
-        SDK_VERSION=9477386; \
+    SDK_VERSION=9477386; \
     else \
-        SDK_VERSION=11076708; \
+    SDK_VERSION=11076708; \
     fi && \
     echo "Using Android cmdline-tools $SDK_VERSION for JDK $JDK_VERSION" && \
     curl -4 -fsSL \
-      https://dl.google.com/android/repository/commandlinetools-linux-${SDK_VERSION}_latest.zip \
-      -o /tmp/cmdline-tools.zip && \
+    https://dl.google.com/android/repository/commandlinetools-linux-${SDK_VERSION}_latest.zip \
+    -o /tmp/cmdline-tools.zip && \
     unzip /tmp/cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools && \
     mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest && \
     rm /tmp/cmdline-tools.zip
@@ -74,9 +74,11 @@ RUN $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
     "platforms;android-33" \
     "platforms;android-34" \
     "platforms;android-35" \
+    "platforms;android-36" \
     "build-tools;33.0.2" \
     "build-tools;34.0.0" \
-    "build-tools;35.0.0"
+    "build-tools;35.0.0" \
+    "build-tools;36.0.0"
 
 ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false"
 
