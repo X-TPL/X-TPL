@@ -152,16 +152,19 @@ def build_app(app):
                 find platforms/android -name "*.gradle" -exec \
                     sed -i 's/jcenter()/mavenCentral()/g' {{}} + || true
 
-                # ---- ensure repositories exist ----
-                        echo "
-                    allprojects {{
-                        repositories {{
-                            google()
-                            mavenCentral()
-                        }}
-                    }}
-                    " >> platforms/android/build.gradle
-                
+                # ---- fix repositories globally ----
+
+                # remove jcenter everywhere
+                find platforms/android -type f -exec \
+                    sed -i 's/jcenter()/mavenCentral()/g' {{}} \; || true
+
+                # force repositories in all gradle files
+                find platforms/android -name "*.gradle" -exec \
+                    sed -i 's/repositories\s*{"{[^}]*}"}/repositories {{ google(); mavenCentral() }}/g' {{}} \; || true
+                    
+                export ANDROID_SDK_ROOT=/opt/android
+                export ANDROID_HOME=/opt/android
+                echo "sdk.dir=$ANDROID_HOME" > platforms/android/local.properties
                 # ---- fix common gradle issues ----
                 find platforms/android -type f -exec sed -i 's/--illegal-access=permit//g' {{}} + || true
 
