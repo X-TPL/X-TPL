@@ -162,8 +162,15 @@ def build_app(app):
                 find platforms/android -name "*.gradle" -exec \
                     sed -i 's/repositories\s*{"{[^}]*}"}/repositories {{ google(); mavenCentral() }}/g' {{}} \; || true
                     
-                export ANDROID_SDK_ROOT=/opt/android
-                export ANDROID_HOME=/opt/android
+                if [ "{jdk_version}" = "8" ]; then
+                    echo "Isolating SDK for JDK 8"
+
+                    for v in 34 35 36; do
+                        if [ -d "$ANDROID_HOME/platforms/android-$v" ]; then
+                            mv "$ANDROID_HOME/platforms/android-$v" "$ANDROID_HOME/platforms/android-$v.disabled" || true
+                        fi
+                    done
+                fi
                 echo "sdk.dir=$ANDROID_HOME" > platforms/android/local.properties
                 # ---- fix common gradle issues ----
                 find platforms/android -type f -exec sed -i 's/--illegal-access=permit//g' {{}} + || true
