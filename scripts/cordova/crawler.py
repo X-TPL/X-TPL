@@ -21,9 +21,9 @@ g = Github(auth=Auth.Token(token))
 # -----------------------
 repos_data = []
 
-repositories = g.search_repositories(query="topic:cordova language:JavaScript", sort='updated')
+repositories = g.search_repositories(query="topic:cordova", sort='updated')
 print(f"{repositories.totalCount} Repositories found in total")
-for repo in repositories[:100]:
+for repo in repositories:
     print(f"[scan] {repo.full_name}")
 
     buildable = False
