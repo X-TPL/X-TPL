@@ -50,7 +50,7 @@ RUN bash -c " \
 RUN gradle -v
 # ---------- android sdk ----------
 RUN mkdir -p $ANDROID_HOME/cmdline-tools && \
-    curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-latest.zip \
+    curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip \
     -o /tmp/cmdline-tools.zip && \
     unzip /tmp/cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools && \
     mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest && \
