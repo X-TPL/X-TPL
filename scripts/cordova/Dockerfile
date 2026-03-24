@@ -50,7 +50,16 @@ RUN bash -c " \
 RUN gradle -v
 # ---------- android sdk ----------
 RUN mkdir -p $ANDROID_HOME/cmdline-tools && \
-    curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip \
+    if [ "$JDK_VERSION" = "8" ]; then \
+    SDK_VERSION=8512546; \
+    elif [ "$JDK_VERSION" = "11" ]; then \
+    SDK_VERSION=9477386; \
+    else \
+    SDK_VERSION=11076708; \
+    fi && \
+    echo "Using Android cmdline-tools $SDK_VERSION for JDK $JDK_VERSION" && \
+    curl -4 -fsSL \
+    https://dl.google.com/android/repository/commandlinetools-linux-${SDK_VERSION}_latest.zip \
     -o /tmp/cmdline-tools.zip && \
     unzip /tmp/cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools && \
     mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest && \
