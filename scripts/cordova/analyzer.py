@@ -210,13 +210,14 @@ def analyze():
             root_dir = repo_dir
         
         candidates = []
+        SKIP_DIRS = {"node_modules", ".git", "platforms", "plugins", "dist", "build"}
+
         for dirpath, dirnames, filenames in os.walk(root_dir):
-            # Skip node_modules entirely
-            if "node_modules" in dirnames:
-                dirnames.remove("node_modules")  # prevents os.walk from descending
+            dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
 
             if "package.json" in filenames:
                 candidates.append(Path(dirpath) / "package.json")
+                
         counter = 0
         for package_path in candidates:
             base_dir = package_path.parent
@@ -226,7 +227,7 @@ def analyze():
                 node_version = extract_node_version(base_dir)
                 buildability = analyze_buildability(base_dir)
                 jdk_version = get_required_jdk(base_dir)
-                if buildability is None:
+                if not buildability:
                     raise Exception("not buildable")
                 
                 app_entry = {
