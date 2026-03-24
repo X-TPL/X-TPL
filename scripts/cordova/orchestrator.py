@@ -136,11 +136,9 @@ def build_app(app):
                 unset ORG_GRADLE_PROJECT_org.gradle.jvmargs
                 # ---- install dependencies ----
                 if [ -f yarn.lock ]; then
-                    yarn install;
-                elif [ -f package-lock.json ]; then
-                    npm ci;
+                    yarn install --ignore-scripts;
                 else
-                    npm install;
+                    npm install --ignore-scripts;
                 fi
 
                 # ---- ensure android platform ----
@@ -149,6 +147,20 @@ def build_app(app):
                 
                 npx cordova prepare android
                 echo "android is prepared"
+                
+                # ---- fix deprecated repos ----
+                find platforms/android -name "*.gradle" -exec \
+                    sed -i 's/jcenter()/mavenCentral()/g' {{}} + || true
+
+                # ---- ensure repositories exist ----
+                        echo "
+                    allprojects {{
+                        repositories {{
+                            google()
+                            mavenCentral()
+                        }}
+                    }}
+                    " >> platforms/android/build.gradle
                 
                 # ---- fix common gradle issues ----
                 find platforms/android -type f -exec sed -i 's/--illegal-access=permit//g' {{}} + || true
