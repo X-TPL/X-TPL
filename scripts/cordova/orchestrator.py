@@ -158,6 +158,7 @@ def build_app(app):
                     maven { url \"https://dl.bintray.com/\" }
                     maven { url \"https://plugins.gradle.org/m2/\" }
                     maven { url \"https://jitpack.io\" }
+                    maven { url \"https://maven.aliyun.com/repository/public" }
                 }
             }" > platforms/android/app/build.gradle
             fi
