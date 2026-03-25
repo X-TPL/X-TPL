@@ -119,20 +119,7 @@ def build_app(app):
 
             find platforms/android -name "*.gradle" -exec \
                 sed -i 's/repositories[[:space:]]*{{[^}}]*}}/repositories {{ google(); mavenCentral() }}/g' {{}} \\; || true
-
-            # ---- isolate SDK for JDK 8 ----
-            if [ "{jdk_version}" = "8" ]; then
-                echo "Isolating SDK for JDK 8"
-
-                for v in 34 35 36; do
-                    mv "$ANDROID_HOME/platforms/android-$v" "$ANDROID_HOME/platforms/android-$v.disabled" 2>/dev/null || true
-                done
-
-                for v in 34.0.0 35.0.0 36.0.0; do
-                    mv "$ANDROID_HOME/build-tools/$v" "$ANDROID_HOME/build-tools/$v.disabled" 2>/dev/null || true
-                done
-            fi
-            """.format(jdk_version=jdk_version)
+            """
             run([
                 "docker", "run", "--rm",
                 "-v", f"{app_path}:/app",
@@ -170,23 +157,6 @@ def build_app(app):
                 echo "android is prepared"
                 {script}
 
-                if [ "{jdk_version}" = "8" ]; then
-                    echo "Isolating SDK for JDK 8"
-
-                    for v in 34 35 36; do
-                        if [ -d "$ANDROID_HOME/platforms/android-$v" ]; then
-                            mv "$ANDROID_HOME/platforms/android-$v" "$ANDROID_HOME/platforms/android-$v.disabled" || true
-                        fi
-                    done
-                fi
-                # hide build-tools as well (CRITICAL)
-                if [ "{jdk_version}" = "8" ]; then
-                    for v in 34.0.0 35.0.0 36.0.0; do
-                        if [ -d "$ANDROID_HOME/build-tools/$v" ]; then
-                            mv "$ANDROID_HOME/build-tools/$v" "$ANDROID_HOME/build-tools/$v.disabled" || true
-                        fi
-                    done
-                fi
                 echo "sdk.dir=$ANDROID_HOME" > platforms/android/local.properties
                 rm -rf $ANDROID_HOME/.android || true
                 # ---- fix common gradle issues ----
