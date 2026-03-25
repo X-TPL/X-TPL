@@ -113,9 +113,7 @@ def build_app(app):
             ensure_image(node_version, jdk_version)
             script = """
             # ---- fix repositories globally ----
-
-            # append legacy repos instead of replacing
-            cat <<'EOF' >> platforms/android/build.gradle
+            cat <<'EOF' > platforms/android/build.gradle
 
             allprojects {
                 repositories {
