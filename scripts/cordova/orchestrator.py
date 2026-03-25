@@ -133,19 +133,7 @@ def build_app(app):
             npx cordova prepare android
 
             # ---- fix repositories globally ----
-            cat <<'EOF' > platforms/android/build.gradle
-            allprojects {
-                repositories {
-                    google()
-                    mavenCentral()
-                    // legacy repos
-                    maven { url "https://jcenter.bintray.com/" }
-                    maven { url "https://dl.bintray.com/" }
-                    maven { url "https://plugins.gradle.org/m2/" }
-                    maven { url "https://jitpack.io" }
-                }
-            }
-            EOF
+            echo "allprojects { repositories { google(); mavenCentral(); maven { url \"https://jcenter.bintray.com/\" }; maven { url \"https://dl.bintray.com/\" }; maven { url \"https://plugins.gradle.org/m2/\" }; maven { url \"https://jitpack.io\" } } }" > platforms/android/build.gradle
 
             echo "sdk.dir=$ANDROID_HOME" > platforms/android/local.properties
 
