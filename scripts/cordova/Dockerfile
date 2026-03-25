@@ -44,11 +44,11 @@ RUN curl -s "https://get.sdkman.io?ci=true&rcupdate=false" | bash
 RUN bash -c " \
     source /root/.sdkman/bin/sdkman-init.sh && \
     if [ \"$JDK_VERSION\" = \"8\" ]; then \
-        echo 'Installing Gradle 6.5 for JDK 8'; \
-        sdk install gradle 6.5; \
+    echo 'Installing Gradle 6.5 for JDK 8'; \
+    sdk install gradle 6.5; \
     else \
-        echo 'Installing Gradle 8.5 for modern JDK'; \
-        sdk install gradle 8.5; \
+    echo 'Installing Gradle 8.5 for modern JDK'; \
+    sdk install gradle 8.5; \
     fi && \
     ln -sf /root/.sdkman/candidates/gradle/current/bin/gradle /usr/bin/gradle \
     "
@@ -68,7 +68,14 @@ RUN mkdir -p $ANDROID_HOME/cmdline-tools && \
     https://dl.google.com/android/repository/commandlinetools-linux-${SDK_VERSION}_latest.zip \
     -o /tmp/cmdline-tools.zip && \
     unzip /tmp/cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools && \
-    mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest && \
+    \
+    if [ -d "$ANDROID_HOME/cmdline-tools/cmdline-tools" ]; then \
+    mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest; \
+    elif [ -d "$ANDROID_HOME/cmdline-tools/tools" ]; then \
+    mv $ANDROID_HOME/cmdline-tools/tools $ANDROID_HOME/cmdline-tools/latest; \
+    else \
+    echo "Unexpected cmdline-tools structure" && exit 1; \
+    fi && \
     rm /tmp/cmdline-tools.zip
 
 # ---------- accept licenses ----------
@@ -76,31 +83,31 @@ RUN yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 
 # ---------- install android packages ----------
 RUN if [ "$JDK_VERSION" = "8" ]; then \
-        echo "Installing legacy Android SDK (JDK 8 compatible)"; \
-        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
-            "platform-tools" \
-            "platforms;android-29" \
-            "platforms;android-30" \
-            "platforms;android-31" \
-            "platforms;android-32" \
-            "platforms;android-33" \
-            "build-tools;29.0.3" \
-            "build-tools;30.0.3" \
-            "build-tools;31.0.0" \
-            "build-tools;32.0.0" \
-            "build-tools;33.0.2"; \
+    echo "Installing legacy Android SDK (JDK 8 compatible)"; \
+    $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+    "platform-tools" \
+    "platforms;android-29" \
+    "platforms;android-30" \
+    "platforms;android-31" \
+    "platforms;android-32" \
+    "platforms;android-33" \
+    "build-tools;29.0.3" \
+    "build-tools;30.0.3" \
+    "build-tools;31.0.0" \
+    "build-tools;32.0.0" \
+    "build-tools;33.0.2"; \
     else \
-        echo "Installing full Android SDK (modern)"; \
-        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
-            "platform-tools" \
-            "platforms;android-33" \
-            "platforms;android-34" \
-            "platforms;android-35" \
-            "platforms;android-36" \
-            "build-tools;33.0.2" \
-            "build-tools;34.0.0" \
-            "build-tools;35.0.0" \
-            "build-tools;36.0.0"; \
+    echo "Installing full Android SDK (modern)"; \
+    $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+    "platform-tools" \
+    "platforms;android-33" \
+    "platforms;android-34" \
+    "platforms;android-35" \
+    "platforms;android-36" \
+    "build-tools;33.0.2" \
+    "build-tools;34.0.0" \
+    "build-tools;35.0.0" \
+    "build-tools;36.0.0"; \
     fi
 
 ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false"
