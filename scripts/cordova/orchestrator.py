@@ -111,15 +111,34 @@ def build_app(app):
             )
 
             ensure_image(node_version, jdk_version)
-            script = """
+            bash_script = r"""set -e
+            cd /app
+            rm -rf platforms plugins node_modules || true
+            rm -rf $GRADLE_USER_HOME || true
+            mkdir -p $GRADLE_USER_HOME
+
+            # unset Gradle options
+            unset JAVA_OPTS
+            unset ORG_GRADLE_PROJECT_org.gradle.jvmargs
+
+            # install deps
+            if [ -f yarn.lock ]; then
+                yarn install --ignore-scripts
+            else
+                npm install --ignore-scripts
+            fi
+
+            # ensure android platform
+            npx cordova platform add android
+            npx cordova prepare android
+
             # ---- fix repositories globally ----
             cat <<'EOF' > platforms/android/build.gradle
-
             allprojects {
                 repositories {
                     google()
                     mavenCentral()
-                    // legacy repos for old Cordova plugins
+                    // legacy repos
                     maven { url "https://jcenter.bintray.com/" }
                     maven { url "https://dl.bintray.com/" }
                     maven { url "https://plugins.gradle.org/m2/" }
@@ -127,6 +146,25 @@ def build_app(app):
                 }
             }
             EOF
+
+            echo "sdk.dir=$ANDROID_HOME" > platforms/android/local.properties
+
+            # fix common gradle issues
+            find platforms/android -type f -exec sed -i 's/--illegal-access=permit//g' {} + || true
+
+            if npx cordova build android --debug --no-interactive --verbose; then
+                echo "Cordova build succeeded"
+            else
+                cd platforms/android
+                if [ ! -f gradlew ]; then
+                    echo "No gradlew found — cannot fallback"
+                    exit 1
+                fi
+                chmod +x gradlew
+                ./gradlew assembleDebug --no-daemon --stacktrace
+            fi
+
+            cp platforms/android/app/build/outputs/apk/debug/*.apk /output/
             """
             run([
                 "docker", "run", "--rm",
@@ -134,59 +172,7 @@ def build_app(app):
                 "-v", f"{out_dir}:/output",
                 "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
                 image_tag(node_version, jdk_version),
-                "bash", "-c",
-                f"""
-                set -e
-
-                cd /app
-                rm -rf platforms plugins node_modules || true
-                rm -rf $GRADLE_USER_HOME || true
-                mkdir -p $GRADLE_USER_HOME
-
-                # ---- clean project gradle ----
-                rm -rf ~/.gradle || true
-                rm -rf platforms/android/.gradle || true
-                
-                #unset GRADLE_OPTS
-                unset JAVA_OPTS
-                unset ORG_GRADLE_PROJECT_org.gradle.jvmargs
-                # ---- install dependencies ----
-                if [ -f yarn.lock ]; then
-                    yarn install --ignore-scripts;
-                else
-                    npm install --ignore-scripts;
-                fi
-
-                # ---- ensure android platform ----
-                npx cordova platform add android
-                
-                
-                npx cordova prepare android
-                echo "android is prepared"
-                {script}
-
-                echo "sdk.dir=$ANDROID_HOME" > platforms/android/local.properties
-                rm -rf $ANDROID_HOME/.android || true
-                # ---- fix common gradle issues ----
-                find platforms/android -type f -exec sed -i 's/--illegal-access=permit//g' {{}} + || true
-
-                if npx cordova build android --debug --no-interactive --verbose; then
-                    echo "Cordova build succeeded"
-                else
-                    echo "Cordova build failed, trying Gradle fallback..."
-
-                    cd platforms/android
-
-                    if [ ! -f gradlew ]; then
-                        echo "No gradlew found — cannot fallback"
-                        exit 1
-                    fi
-
-                    chmod +x gradlew
-                    ./gradlew assembleDebug --no-daemon --stacktrace
-                fi
-                cp platforms/android/app/build/outputs/apk/debug/*.apk /output/
-                """
+                "bash", "-c", bash_script
             ], log_file)
 
             run(
