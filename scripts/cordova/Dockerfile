@@ -82,8 +82,7 @@ RUN mkdir -p $ANDROID_HOME/cmdline-tools && \
 RUN yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 
 # ---------- install android packages ----------
-RUN if [ "$JDK_VERSION" = "8" ]; then \
-    echo "Installing legacy Android SDK (JDK 8 compatible)"; \
+RUN echo "Installing full Android SDK (modern)"; \
     $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
     "platform-tools" \
     "platforms;android-29" \
@@ -91,34 +90,17 @@ RUN if [ "$JDK_VERSION" = "8" ]; then \
     "platforms;android-31" \
     "platforms;android-32" \
     "platforms;android-33" \
-    "platforms;android-34" \ 
+    "platforms;android-34" \
     "platforms;android-35" \
     "platforms;android-36" \
     "build-tools;29.0.3" \
     "build-tools;30.0.3" \
     "build-tools;31.0.0" \
     "build-tools;32.0.0" \
-    "build-tools;33.0.2"; \
-    "build-tools;34.0.0" \
-    "build-tools;35.0.0" \
-    "build-tools;36.0.0"; \
-    else \
-    echo "Installing full Android SDK (modern)"; \
-    $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
-    "platform-tools" \
-    "platforms;android-30" \
-    "platforms;android-32" \
-    "platforms;android-33" \
-    "platforms;android-34" \
-    "platforms;android-35" \
-    "platforms;android-36" \
-    "build-tools;30.0.3" \
-    "build-tools;32.0.0" \
     "build-tools;33.0.2" \
     "build-tools;34.0.0" \
     "build-tools;35.0.0" \
-    "build-tools;36.0.0"; \
-    fi
+    "build-tools;36.0.0";
 
 ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false"
 
