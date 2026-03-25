@@ -114,11 +114,21 @@ def build_app(app):
             script = """
             # ---- fix repositories globally ----
 
-                find platforms/android \( -name "*.gradle" -o -name "*.gradle.kts" \) -print0 | \
-                    xargs -0 sed -i 's/jcenter()/mavenCentral()/g' || true
+            # append legacy repos instead of replacing
+            cat <<'EOF' >> platforms/android/build.gradle
 
-                find platforms/android \( -name "*.gradle" -o -name "*.gradle.kts" \) -print0 | \
-                    xargs -0 sed -i 's/repositories[[:space:]]*{[^}]*}/repositories { google(); mavenCentral() }/g' || true
+            allprojects {
+                repositories {
+                    google()
+                    mavenCentral()
+                    // legacy repos for old Cordova plugins
+                    maven { url "https://jcenter.bintray.com/" }
+                    maven { url "https://dl.bintray.com/" }
+                    maven { url "https://plugins.gradle.org/m2/" }
+                    maven { url "https://jitpack.io" }
+                }
+            }
+            EOF
             """
             run([
                 "docker", "run", "--rm",
