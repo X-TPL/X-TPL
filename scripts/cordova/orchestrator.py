@@ -119,7 +119,6 @@ def build_app(app):
 
             # unset Gradle options
             unset JAVA_OPTS
-            unset ORG_GRADLE_PROJECT_org.gradle.jvmargs
 
             # install deps
             if [ -f yarn.lock ]; then
@@ -140,9 +139,12 @@ def build_app(app):
                 repositories {\
                     google()\
                     mavenCentral()\
-                    gradlePluginPortal()\
+                    maven { url "https://plugins.gradle.org/m2/" }\
                     maven { url "https://maven.aliyun.com/repository/public" }\
-                    maven { url "https://jcenter.bintray.com/" }\
+                    maven {\
+                        url "https://jcenter.bintray.com/"\
+                        metadataSources { artifact() }\
+                    }\
                     maven { url "https://jitpack.io" }\
                 }\
             ' "$f" || true
@@ -151,9 +153,12 @@ def build_app(app):
                 repositories {\
                     google()\
                     mavenCentral()\
-                    gradlePluginPortal()\
+                    maven { url "https://plugins.gradle.org/m2/" }\
                     maven { url "https://maven.aliyun.com/repository/public" }\
-                    maven { url "https://jcenter.bintray.com/" }\
+                    maven {\
+                        url "https://jcenter.bintray.com/"\
+                        metadataSources { artifact() }\
+                    }\
                     maven { url "https://jitpack.io" }\
                 }\
             ' "$f" || true
@@ -162,7 +167,7 @@ def build_app(app):
 
             # ---- FIX versioncompare (very common failure) ----
             grep -RIl 'com.g00fy2:versioncompare:1.3.4' platforms/android 2>/dev/null | \
-            xargs -r sed -i 's/com.g00fy2:versioncompare:1.3.4/com.g00fy2:versioncompare:1.5.0/g' || true
+            xargs -r sed -i 's/com.g00fy2:versioncompare:1.3.4/com.g00fy2:versioncompare:1.4.1/g' || true
 
             # ---- OPTIONAL: remove illegal JVM args ----
             find platforms/android -type f -exec sed -i 's/--illegal-access=permit//g' {} + || true
@@ -180,6 +185,7 @@ def build_app(app):
             # ---- android sdk path ----
             echo "sdk.dir=$ANDROID_HOME" > platforms/android/local.properties
 
+            echo "org.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=512m" >> platforms/android/gradle.properties
             # ---- build ----
             npx cordova build android --debug --no-interactive --verbose;
 

@@ -103,6 +103,7 @@ RUN echo "Installing full Android SDK (modern)"; \
     "build-tools;36.0.0";
 
 ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false"
+ENV ORG_GRADLE_PROJECT_org.gradle.jvmargs="-Xmx2g -XX:MaxMetaspaceSize=512m -Dfile.encoding=UTF-8"
 
 # ---------- workdir ----------
 WORKDIR /app
