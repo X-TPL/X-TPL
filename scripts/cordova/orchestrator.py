@@ -132,14 +132,43 @@ def build_app(app):
             npx cordova platform add android
             npx cordova prepare android
 
-            # ---- fix repositories globally ----
-            echo "allprojects { repositories { google(); mavenCentral(); maven { url \"https://jcenter.bintray.com/\" }; maven { url \"https://dl.bintray.com/\" }; maven { url \"https://plugins.gradle.org/m2/\" }; maven { url \"https://jitpack.io\" } } }" > platforms/android/build.gradle
+            # ---- patch build.gradle only for JDK 8 ----
+            if [ \"""" + str(jdk_version) + r"""\" = "8" ]; then
+                mkdir -p platforms/android/app
+                echo "apply plugin: 'com.android.application'
 
+            android {
+                compileSdkVersion 30
+                buildToolsVersion \"30.0.3\"
+
+                defaultConfig {
+                    applicationId \"org.example.app\"
+                    minSdkVersion 21
+                    targetSdkVersion 30
+                    versionCode 1
+                    versionName \"1.0\"
+                }
+            }
+
+            allprojects {
+                repositories {
+                    google()
+                    mavenCentral()
+                    maven { url \"https://jcenter.bintray.com/\" }
+                    maven { url \"https://dl.bintray.com/\" }
+                    maven { url \"https://plugins.gradle.org/m2/\" }
+                    maven { url \"https://jitpack.io\" }
+                }
+            }" > platforms/android/app/build.gradle
+            fi
+
+            # point to SDK
             echo "sdk.dir=$ANDROID_HOME" > platforms/android/local.properties
 
             # fix common gradle issues
             find platforms/android -type f -exec sed -i 's/--illegal-access=permit//g' {} + || true
 
+            # build
             if npx cordova build android --debug --no-interactive --verbose; then
                 echo "Cordova build succeeded"
             else
