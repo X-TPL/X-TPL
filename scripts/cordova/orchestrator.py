@@ -132,55 +132,56 @@ def build_app(app):
             npx cordova platform add android
             npx cordova prepare android
 
-            # ---- patch build.gradle only for JDK 8 ----
-            if [ \"""" + str(jdk_version) + r"""\" = "8" ]; then
-                mkdir -p platforms/android/app
-                echo "apply plugin: 'com.android.application'
+            # ---- PATCH ROOT GRADLE FILES (CRITICAL FIX) ----
+            for f in platforms/android/build.gradle platforms/android/CordovaLib/build.gradle; do
+                if [ -f "$f" ]; then
+                    # add missing repositories to buildscript + allprojects
+                    sed -i '/buildscript[[:space:]]*{/a\
+                repositories {\
+                    google()\
+                    mavenCentral()\
+                    gradlePluginPortal()\
+                    maven { url "https://maven.aliyun.com/repository/public" }\
+                    maven { url "https://jcenter.bintray.com/" }\
+                    maven { url "https://jitpack.io" }\
+                }\
+            ' "$f" || true
 
-            android {
-                compileSdkVersion 30
-                buildToolsVersion \"30.0.3\"
+                    sed -i '/allprojects[[:space:]]*{/a\
+                repositories {\
+                    google()\
+                    mavenCentral()\
+                    gradlePluginPortal()\
+                    maven { url "https://maven.aliyun.com/repository/public" }\
+                    maven { url "https://jcenter.bintray.com/" }\
+                    maven { url "https://jitpack.io" }\
+                }\
+            ' "$f" || true
+                fi
+            done
 
-                defaultConfig {
-                    applicationId \"org.example.app\"
-                    minSdkVersion 21
-                    targetSdkVersion 30
-                    versionCode 1
-                    versionName \"1.0\"
-                }
-            }
+            # ---- FIX versioncompare (very common failure) ----
+            grep -RIl 'com.g00fy2:versioncompare:1.3.4' platforms/android 2>/dev/null | \
+            xargs -r sed -i 's/com.g00fy2:versioncompare:1.3.4/com.g00fy2:versioncompare:1.5.0/g' || true
 
-            allprojects {
-                repositories {
-                    google()
-                    mavenCentral()
-                    maven { url \"https://jcenter.bintray.com/\" }
-                    maven { url \"https://dl.bintray.com/\" }
-                    maven { url \"https://plugins.gradle.org/m2/\" }
-                    maven { url \"https://jitpack.io\" }
-                    maven { url \"https://maven.aliyun.com/repository/public\" }
-                }
-            }" > platforms/android/app/build.gradle
-            fi
-
-            # point to SDK
-            echo "sdk.dir=$ANDROID_HOME" > platforms/android/local.properties
-
-            # fix common gradle issues
+            # ---- OPTIONAL: remove illegal JVM args ----
             find platforms/android -type f -exec sed -i 's/--illegal-access=permit//g' {} + || true
 
-            # build
-            if npx cordova build android --debug --no-interactive --verbose; then
-                echo "Cordova build succeeded"
-            else
-                cd platforms/android
-                if [ ! -f gradlew ]; then
-                    echo "No gradlew found — cannot fallback"
-                    exit 1
-                fi
-                chmod +x gradlew
-                ./gradlew assembleDebug --no-daemon --stacktrace
+            # ---- JDK 8 specific patch (minimal, no overwrite!) ----
+            if [ \"""" + str(jdk_version) + r"""\" = "8" ]; then
+                # ensure older sdk usage (do NOT overwrite build.gradle anymore)
+                find platforms/android -name "build.gradle" -exec \
+                    sed -i 's/compileSdkVersion [0-9]\+/compileSdkVersion 30/g' {} \; || true
+
+                find platforms/android -name "build.gradle" -exec \
+                    sed -i 's/targetSdkVersion [0-9]\+/targetSdkVersion 30/g' {} \; || true
             fi
+
+            # ---- android sdk path ----
+            echo "sdk.dir=$ANDROID_HOME" > platforms/android/local.properties
+
+            # ---- build ----
+            npx cordova build android --debug --no-interactive --verbose;
 
             cp platforms/android/app/build/outputs/apk/debug/*.apk /output/
             """
