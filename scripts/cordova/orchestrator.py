@@ -114,11 +114,11 @@ def build_app(app):
             script = """
             # ---- fix repositories globally ----
 
-            find platforms/android -type f -exec \
-                sed -i 's/jcenter()/mavenCentral()/g' {{}} \\; || true
+                find platforms/android \( -name "*.gradle" -o -name "*.gradle.kts" \) -print0 | \
+                    xargs -0 sed -i 's/jcenter()/mavenCentral()/g' || true
 
-            find platforms/android -name "*.gradle" -exec \
-                sed -i 's/repositories[[:space:]]*{{[^}}]*}}/repositories {{ google(); mavenCentral() }}/g' {{}} \\; || true
+                find platforms/android \( -name "*.gradle" -o -name "*.gradle.kts" \) -print0 | \
+                    xargs -0 sed -i 's/repositories[[:space:]]*{[^}]*}/repositories { google(); mavenCentral() }/g' || true
             """
             run([
                 "docker", "run", "--rm",
