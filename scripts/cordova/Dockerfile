@@ -43,15 +43,21 @@ RUN node -v && npm -v && yarn -v && cordova -v
 RUN curl -s "https://get.sdkman.io?ci=true&rcupdate=false" | bash
 RUN bash -c " \
     source /root/.sdkman/bin/sdkman-init.sh && \
-    sdk install gradle 8.5 && \
-    ln -s /root/.sdkman/candidates/gradle/current/bin/gradle /usr/bin/gradle \
+    if [ \"$JDK_VERSION\" = \"8\" ]; then \
+        echo 'Installing Gradle 6.5 for JDK 8'; \
+        sdk install gradle 6.5; \
+    else \
+        echo 'Installing Gradle 8.5 for modern JDK'; \
+        sdk install gradle 8.5; \
+    fi && \
+    ln -sf /root/.sdkman/candidates/gradle/current/bin/gradle /usr/bin/gradle \
     "
 
 RUN gradle -v
 # ---------- android sdk ----------
 RUN mkdir -p $ANDROID_HOME/cmdline-tools && \
     if [ "$JDK_VERSION" = "8" ]; then \
-    SDK_VERSION=8512546; \
+    SDK_VERSION=6609375; \
     elif [ "$JDK_VERSION" = "11" ]; then \
     SDK_VERSION=9477386; \
     else \
