@@ -168,7 +168,11 @@ def build_app(app):
             # ---- FIX versioncompare (very common failure) ----
             grep -RIl 'com.g00fy2:versioncompare:1.3.4' platforms/android 2>/dev/null | \
             xargs -r sed -i 's/com.g00fy2:versioncompare:1.3.4/io.github.g00fy2:versioncompare:1.5.0/g' || true
-
+            
+            # ---- fix versioncompare imports (CRITICAL) ----
+            find platforms/android \( -name "*.gradle" -o -name "*.gradle.kts" \) -print0 | \
+            xargs -0 sed -i 's/import com\.g00fy2\.versioncompare\.Version/import io.github.g00fy2.versioncompare.Version/g' || true
+            
             # ---- OPTIONAL: remove illegal JVM args ----
             find platforms/android -type f -exec sed -i 's/--illegal-access=permit//g' {} + || true
 
