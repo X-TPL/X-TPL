@@ -65,7 +65,7 @@ seen = set()
 
 while buildable_count < TARGET_BUILDABLE:
     query_time = cursor_time.strftime("%Y-%m-%dT%H:%M:%SZ")
-    query = f"cordova pushed:<{query_time}"
+    query = f"topic:cordova pushed:<{query_time}"
 
     print(f"\n[query] {query}")
 
