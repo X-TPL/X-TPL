@@ -5,7 +5,7 @@ from github import Github, Auth
 from dotenv import load_dotenv
 
 OUTPUT_FILE = "repos.json"
-TARGET_BUILDABLE = 50  # 🔥 set your target here
+TARGET_BUILDABLE = 1000  # set your target here
 BATCH_SIZE = 1000       # GitHub max per page
 
 # -----------------------
@@ -71,7 +71,6 @@ while buildable_count < TARGET_BUILDABLE:
 
     results = g.search_repositories(
         query=query,
-        sort="updated",
         order="desc"
     )
 
