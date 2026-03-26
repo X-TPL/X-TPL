@@ -71,6 +71,7 @@ while buildable_count < TARGET_BUILDABLE:
 
     results = g.search_repositories(
         query=query,
+        sort='updated',
         order="desc"
     )
 
