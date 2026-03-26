@@ -14,15 +14,6 @@ ENV PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:/u
 
 RUN mkdir -p /opt/gradle
 
-
-RUN mkdir -p /tmp/gradle && \
-    printf '%s\n' \
-      'org.gradle.daemon=false' \
-      'org.gradle.parallel=false' \
-      'org.gradle.workers.max=1' \
-      'org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8' \
-      > /tmp/gradle/gradle.properties
-
 # ---------- base deps ----------
 RUN apt-get update && apt-get install -y \
     curl \
