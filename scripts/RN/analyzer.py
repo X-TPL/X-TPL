@@ -162,56 +162,51 @@ def analyze_react_native_buildability(pkg_dir: Path) -> str | None:
 
 def analyze():
     apps = []
-    duplicated_repos = 0
-    total_repos = 0
     for repo_dir in EXTRACT_ROOT.iterdir():
         if not repo_dir.is_dir():
             continue
 
         subdirs = [d for d in repo_dir.iterdir() if d.is_dir()]
-        if len(subdirs) == 1:
-            root_dir = subdirs[0]
-        else:
-            root_dir = repo_dir
-        
-        candidates = []
-        for dirpath, dirnames, filenames in os.walk(root_dir):
-            # Skip node_modules entirely
-            if "node_modules" in dirnames:
-                dirnames.remove("node_modules")  # prevents os.walk from descending
+        root_dir = subdirs[0] if len(subdirs) == 1 else repo_dir
 
-            if "package.json" in filenames:
-                candidates.append(Path(dirpath) / "package.json")
-        counter = 0
-        for package_path in candidates:
-            base_dir = package_path.parent
+        # os.walk yields root_dir first, so root is checked before any subdir
+        app_entry = None
+        for dirpath, dirnames, filenames in os.walk(root_dir):
+            if "node_modules" in dirnames:
+                dirnames.remove("node_modules")
+
+            if "package.json" not in filenames:
+                continue
+
+            base_dir = Path(dirpath)
 
             try:
-
                 node_version = extract_node_version(base_dir)
                 buildability = analyze_react_native_buildability(base_dir)
                 gradle_version = extract_gradle_version(base_dir)
                 jdk_version = predict_jdk_from_gradle(gradle_version)
+
                 if buildability is None:
-                    raise Exception("not buildable")
-                
+                    continue
+
                 app_entry = {
-                    "id": repo_dir.name if len(candidates) == 1 else f"{repo_dir.name}-{counter}",
+                    "id": repo_dir.name,
                     "path": normalize_path(base_dir),
                     "node": node_version,
                     "type": buildability,
-                    "jdk": jdk_version, 
+                    "jdk": jdk_version,
                     "output": "apk"
                 }
-                counter += 1
-                apps.append(app_entry)
-                print(f"[ok] {repo_dir.name}")
+                break
 
-            except Exception as e:
-                print(f"[skip] {repo_dir.name}: {e}")
-        if counter > 1:
-            duplicated_repos += 1
-            total_repos += counter
+            except Exception:
+                continue
+
+        if app_entry:
+            apps.append(app_entry)
+            print(f"[ok] {repo_dir.name}")
+        else:
+            print(f"[skip] {repo_dir.name}: no valid RN app found")
 
     manifest = {"apps": apps}
 
@@ -224,8 +219,6 @@ def analyze():
         )
 
     print(f"\nGenerated {len(apps)} build entries.")
-    print(f"\n{duplicated_repos} had multiple build entries")
-    print(f"\n{total_repos} build entries originate from duplicated repos")
 
 
 if __name__ == "__main__":

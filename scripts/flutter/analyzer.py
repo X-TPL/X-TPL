@@ -145,30 +145,29 @@ def has_bad_dependency(pubspec_data: dict) -> bool:
 
 def analyze():
     apps = []
-    duplicated_repos = 0
-    total_repos = 0
     for repo_dir in EXTRACT_ROOT.iterdir():
         if not repo_dir.is_dir():
             continue
 
-        pubspecs = list(repo_dir.rglob("pubspec.yaml"))
-        counter = 0
+        subdirs = [d for d in repo_dir.iterdir() if d.is_dir()]
+        root_dir = subdirs[0] if len(subdirs) == 1 else repo_dir
+
+        # Root-first: sort pubspecs by path depth so root_dir comes before subdirs
+        pubspecs = sorted(root_dir.rglob("pubspec.yaml"), key=lambda p: len(p.parts))
+
+        app_entry = None
         for pubspec_path in pubspecs:
             base_dir = pubspec_path.parent
 
-            # Only consider valid Flutter app roots
             android_dir = base_dir / "android"
             main_file = base_dir / "lib" / "main.dart"
 
             if not android_dir.exists() or not main_file.exists():
-                # Skip packages/examples
                 continue
 
             try:
-                text = pubspec_path.read_text()
-                pubspec_data = yaml.safe_load(text) or {}
+                pubspec_data = yaml.safe_load(pubspec_path.read_text()) or {}
 
-                # 🚫 Skip apps with git dependencies
                 if has_bad_dependency(pubspec_data):
                     print(f"[skip] {repo_dir.name}: contains bad dependency")
                     continue
@@ -176,20 +175,21 @@ def analyze():
                 flutter_version = extract_flutter_version(pubspec_data)
 
                 app_entry = {
-                    "id": repo_dir.name if len(pubspecs) == 1 else f"{repo_dir.name}-{counter}",
+                    "id": repo_dir.name,
                     "path": normalize_path(base_dir),
                     "flutter": flutter_version,
                     "output": "apk"
                 }
-                counter += 1
-                apps.append(app_entry)
-                print(f"[ok] {repo_dir.name}")
+                break
 
-            except Exception as e:
-                print(f"[skip] {repo_dir.name}: {e}")
-        if counter > 1:
-            duplicated_repos += 1
-            total_repos += counter
+            except Exception:
+                continue
+
+        if app_entry:
+            apps.append(app_entry)
+            print(f"[ok] {repo_dir.name}")
+        else:
+            print(f"[skip] {repo_dir.name}: no valid Flutter app found")
 
     manifest = {"apps": apps}
 
@@ -202,8 +202,6 @@ def analyze():
         )
 
     print(f"\nGenerated {len(apps)} build entries.")
-    print(f"\n{duplicated_repos} had multiple build entries")
-    print(f"\n{total_repos} build entries originate from duplicated repos")
 
 
 if __name__ == "__main__":
