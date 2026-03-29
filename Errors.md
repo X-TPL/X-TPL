@@ -99,6 +99,14 @@ done | wc -l
 To find directories without apk: for d in */; do
   ls "$d"*.apk >/dev/null 2>&1 || echo "$d"
 done
+
+To count files with a certain word: grep -rl "SAXParseException" /path/to/folder | wc -l
+
+To delete dictionaries with a certain keyword: grep -rl "npm error" . | xargs -n1 dirname | sort -u |
+ xargs rm -r
+
+To delete all dictionaries with an apk: find . -type f -name "*.apk" -exec dirname {} \; | sort -u | xargs rm -rf
+
 ## values
 
 25.02. 36/79

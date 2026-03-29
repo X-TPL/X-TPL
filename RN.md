@@ -45,6 +45,8 @@ built: 315
 Somehow we have 1016 directories
 Generated 787 build entries.
 
-75 had multiple build entries
+75 Repos had multiple build entries
 
 264 build entries originate from duplicated repos
+
+duplications originate from examples + tests
