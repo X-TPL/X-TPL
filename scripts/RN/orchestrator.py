@@ -153,6 +153,10 @@ def build_app(app):
                 # ---- clean gradle ----
                 (./gradlew clean || true) && \
 
+                # ---- enable ABI splits ----
+                grep -q 'splits' app/build.gradle 2>/dev/null || \
+                sed -i '/^android[[:space:]]*{{/a\    splits {{ abi {{ reset(); enable true; universalApk false; include "armeabi-v7a", "arm64-v8a", "x86", "x86_64" }} }}' app/build.gradle || true && \
+
                 # ---- build debug apk ----
                 ./gradlew assembleDebug --no-daemon && \
 
