@@ -162,6 +162,11 @@ def build_app(app):
 
                 # ---- copy output ----
                 cp app/build/outputs/apk/debug/*.apk /output/
+
+                # ---- copy TPL metadata ----
+                [ -f ../package.json ] && cp ../package.json /output/ || true
+                [ -f ../package-lock.json ] && cp ../package-lock.json /output/ || true
+                [ -f ../yarn.lock ] && cp ../yarn.lock /output/ || true
                 """
             ], log_file)
 
