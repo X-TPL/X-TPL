@@ -141,10 +141,7 @@ def build_app(app):
                     mavenCentral()\
                     maven { url "https://plugins.gradle.org/m2/" }\
                     maven { url "https://maven.aliyun.com/repository/public" }\
-                    maven {\
-                        url "https://jcenter.bintray.com/"\
-                        metadataSources { artifact() }\
-                    }\
+                    maven { url "https://jcenter.bintray.com/" }\
                     maven { url "https://jitpack.io" }\
                 }\
             ' "$f" || true
@@ -155,10 +152,7 @@ def build_app(app):
                     mavenCentral()\
                     maven { url "https://plugins.gradle.org/m2/" }\
                     maven { url "https://maven.aliyun.com/repository/public" }\
-                    maven {\
-                        url "https://jcenter.bintray.com/"\
-                        metadataSources { artifact() }\
-                    }\
+                    maven { url "https://jcenter.bintray.com/" }\
                     maven { url "https://jitpack.io" }\
                 }\
             ' "$f" || true
