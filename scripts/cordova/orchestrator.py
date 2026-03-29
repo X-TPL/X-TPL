@@ -162,11 +162,11 @@ def build_app(app):
             # ---- FIX versioncompare (very common failure) ----
             grep -RIl 'com.g00fy2:versioncompare:1.3.4' platforms/android 2>/dev/null | \
             xargs -r sed -i 's/com.g00fy2:versioncompare:1.3.4/io.github.g00fy2:versioncompare:1.5.0/g' || true
-            
+
             # ---- fix versioncompare imports (CRITICAL) ----
             find platforms/android \( -name "*.gradle" -o -name "*.gradle.kts" \) -print0 | \
             xargs -0 sed -i 's/import com\.g00fy2\.versioncompare\.Version/import io.github.g00fy2.versioncompare.Version/g' || true
-            
+
             # ---- OPTIONAL: remove illegal JVM args ----
             find platforms/android -type f -exec sed -i 's/--illegal-access=permit//g' {} + || true
 
@@ -187,6 +187,12 @@ def build_app(app):
             npx cordova build android --debug --no-interactive --verbose;
 
             cp platforms/android/app/build/outputs/apk/debug/*.apk /output/
+
+            # ---- copy TPL metadata ----
+            [ -f plugins/fetch.json ] && cp plugins/fetch.json /output/ || true
+            [ -f platforms/android/app/build.gradle ] && cp platforms/android/app/build.gradle /output/app-build.gradle || true
+            [ -f package-lock.json ] && cp package-lock.json /output/ || true
+            [ -f yarn.lock ] && cp yarn.lock /output/ || true
             """
             run([
                 "docker", "run", "--rm",
