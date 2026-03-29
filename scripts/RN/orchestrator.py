@@ -105,6 +105,8 @@ def build_app(app):
 
     out_dir = OUTPUT_DIR / app_id
     out_dir.mkdir(parents=True, exist_ok=True)
+    r8_dir = out_dir / "r8"
+    r8_dir.mkdir(parents=True, exist_ok=True)
 
     log_file = out_dir / "build.log"
     log_file.write_text("")
@@ -167,6 +169,58 @@ def build_app(app):
                 [ -f ../package.json ] && cp ../package.json /output/ || true
                 [ -f ../package-lock.json ] && cp ../package-lock.json /output/ || true
                 [ -f ../yarn.lock ] && cp ../yarn.lock /output/ || true
+                """
+            ], log_file)
+
+            run([
+                "docker", "run", "--rm",
+                "-v", f"{app_path}:/app",
+                "-v", f"{out_dir}:/output",
+                "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
+                image_tag(node_version, jdk_version),
+                "bash", "-c",
+                f"""
+                set -e
+
+                cd /app && \
+
+                # ---- install deps (yarn or npm) ----
+                if [ -f yarn.lock ]; then
+                    yarn install;
+                else
+                    npm install;
+                fi && \
+
+                # ---- detect expo ----
+                if grep -q '"expo"' package.json; then
+                    echo "Expo project detected";
+                    CI=1 npx expo prebuild --platform android
+                fi && \
+
+                cd android && \
+
+                chmod +x gradlew && \
+
+                # ---- enable ABI splits ----
+                grep -q 'splits' app/build.gradle 2>/dev/null || \
+                sed -i '/^android[[:space:]]*{{/a\    splits {{ abi {{ reset(); enable true; universalApk false; include "armeabi-v7a", "arm64-v8a", "x86", "x86_64" }} }}' app/build.gradle || true && \
+
+                # ---- enable R8 ----
+                sed -i 's/enableProguardInReleaseBuilds = false/enableProguardInReleaseBuilds = true/' app/build.gradle || true && \
+
+                # ---- sign release with debug key ----
+                sed -i '/buildTypes/,/}}/s/release {{/release {{\n            signingConfig signingConfigs.debug/' app/build.gradle || true && \
+
+                # ---- build release apk ----
+                ./gradlew assembleRelease --no-daemon && \
+
+                # ---- copy output ----
+                cp app/build/outputs/apk/release/*.apk /output/r8/
+
+                # ---- copy TPL metadata ----
+                [ -f ../package.json ] && cp ../package.json /output/r8/ || true
+                [ -f ../package-lock.json ] && cp ../package-lock.json /output/r8/ || true
+                [ -f ../yarn.lock ] && cp ../yarn.lock /output/r8/ || true
                 """
             ], log_file)
 
