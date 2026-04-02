@@ -253,6 +253,7 @@ def build_app(app):
                 if grep -R "part '.*\\.g\\.dart'" lib >/dev/null 2>&1; then \
                     flutter pub run build_runner build --delete-conflicting-outputs || true; \
                 fi && \
+                sed -i 's/signingConfig signingConfigs\.release/signingConfig signingConfigs.debug/' android/app/build.gradle || true && \
                 flutter build {output_type} --release --no-pub --split-per-abi && \
                 cp build/app/outputs/flutter-apk/*.apk /output/r8/ && \
                 cp .dart_tool/package_config.json /output/r8/ && \
@@ -275,6 +276,7 @@ def build_app(app):
                 if grep -R "part '.*\\.g\\.dart'" lib >/dev/null 2>&1; then \
                     flutter pub run build_runner build --delete-conflicting-outputs || true; \
                 fi && \
+                sed -i 's/signingConfig signingConfigs\.release/signingConfig signingConfigs.debug/' android/app/build.gradle || true && \
                 flutter build {output_type} --release --obfuscate --split-debug-info=/output/obfuscated/ --no-pub --split-per-abi && \
                 cp build/app/outputs/flutter-apk/*.apk /output/obfuscated/ && \
                 cp .dart_tool/package_config.json /output/obfuscated/ && \
