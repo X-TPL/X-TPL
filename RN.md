@@ -40,13 +40,7 @@ downloaded:
 build entries:787
 built: 315
 
-# Duplication typescript
+# typescript
 
-Somehow we have 1016 directories
-Generated 787 build entries.
+build entries: 566
 
-75 Repos had multiple build entries
-
-264 build entries originate from duplicated repos
-
-duplications originate from examples + tests
