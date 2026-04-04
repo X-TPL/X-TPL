@@ -194,6 +194,9 @@ def build_app(app):
                     npm install;
                 fi && \
 
+                # ---- patch toReversed (Node <20 compat) ----
+                find node_modules -name "loadConfig.js" -path "*/metro-config/*" -exec sed -i 's/\.toReversed()/.slice().reverse()/g' {{}} \; 2>/dev/null || true && \
+
                 # ---- detect expo ----
                 if grep -q '"expo"' package.json; then
                     echo "Expo project detected";
