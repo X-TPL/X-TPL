@@ -159,7 +159,7 @@ def build_app(app):
                 if grep -q 'splits' app/build.gradle 2>/dev/null; then \
                     sed -i 's/enable false/enable true/' app/build.gradle || true; \
                 else \
-                    sed -i '/^android[[:space:]]*{{/a\    splits {{ abi {{ reset(); enable true; universalApk false; include "armeabi-v7a", "arm64-v8a", "x86", "x86_64" }} }}' app/build.gradle || true; \
+                    sed -i '/^android[[:space:]]*{{/a\    splits {{\\n        abi {{\\n            reset()\\n            enable true\\n            universalApk false\\n            include "armeabi-v7a", "arm64-v8a", "x86", "x86_64"\\n        }}\\n    }}' app/build.gradle || true; \
                 fi && \
 
                 # ---- build debug apk ----
@@ -208,7 +208,7 @@ def build_app(app):
                 if grep -q 'splits' app/build.gradle 2>/dev/null; then \
                     sed -i 's/enable false/enable true/' app/build.gradle || true; \
                 else \
-                    sed -i '/^android[[:space:]]*{{/a\    splits {{ abi {{ reset(); enable true; universalApk false; include "armeabi-v7a", "arm64-v8a", "x86", "x86_64" }} }}' app/build.gradle || true; \
+                    sed -i '/^android[[:space:]]*{{/a\    splits {{\\n        abi {{\\n            reset()\\n            enable true\\n            universalApk false\\n            include "armeabi-v7a", "arm64-v8a", "x86", "x86_64"\\n        }}\\n    }}' app/build.gradle || true; \
                 fi && \
 
                 # ---- enable R8 ----
