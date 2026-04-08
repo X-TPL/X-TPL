@@ -135,11 +135,9 @@ def build_app(app):
 
                 # ---- install deps (yarn or npm) ----
                 if [ -f yarn.lock ]; then
-                    yarn install;
-                # elif [ -f package-lock.json ]; then
-                #    npm ci --legacy-peer-deps;
+                    yarn install --ignore-scripts;
                 else
-                    npm install;
+                    npm install --ignore-scripts;
                 fi && \
 
                 # ---- detect expo ----
@@ -189,13 +187,22 @@ def build_app(app):
 
                 # ---- install deps (yarn or npm) ----
                 if [ -f yarn.lock ]; then
-                    yarn install;
+                    yarn install --ignore-scripts;
                 else
-                    npm install;
+                    npm install --ignore-scripts;
                 fi && \
 
                 # ---- patch toReversed (Node <20 compat) ----
                 find node_modules -name "loadConfig.js" -path "*/metro-config/*" -exec sed -i 's/\.toReversed()/.slice().reverse()/g' {{}} \; 2>/dev/null || true && \
+
+                # ---- patch ESM-only metro config deps ----
+                if grep -q 'react-native-monorepo-config' metro.config.js 2>/dev/null; then \
+                    if [ -d node_modules/@react-native/metro-config ]; then \
+                        printf 'const {{getDefaultConfig, mergeConfig}} = require("@react-native/metro-config");\nmodule.exports = mergeConfig(getDefaultConfig(__dirname), {{}});\n' > metro.config.js; \
+                    else \
+                        printf 'const {{getDefaultConfig}} = require("metro-config");\nmodule.exports = getDefaultConfig(__dirname);\n' > metro.config.js; \
+                    fi; \
+                fi && \
 
                 # ---- detect expo ----
                 if grep -q '"expo"' package.json; then
