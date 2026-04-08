@@ -46,6 +46,7 @@ def load_manifest():
         return yaml.safe_load(f)["apps"]
 
 def pick_next_node_version(node):
+    node = str(node)
     if node == "16": return "18"
     elif node == "18": return "20"
     elif node == "20": return "22"
@@ -99,7 +100,7 @@ def ensure_image(node_version: str, jdk_version: str):
 
 def build_app(app):
     app_id = app["id"]
-    node_version = app["node"]
+    node_version = str(app["node"])
     output_type = app.get("output", "apk")
     app_path = ROOT / app["path"]
 
