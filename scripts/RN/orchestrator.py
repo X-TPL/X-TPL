@@ -162,8 +162,14 @@ def build_app(app):
                 fi && \
 
                 # ---- build debug apk ----
-                ./gradlew assembleDebug --no-daemon && \
+                ./gradlew assembleDebug --no-daemon || exit 1 && \
 
+                APK_PATH="app/build/outputs/apk/debug"
+
+                if ! ls $APK_PATH/*.apk 1> /dev/null 2>&1; then
+                    echo "ERROR: APK not generated"
+                    exit 1
+                fi
                 # ---- copy output ----
                 cp app/build/outputs/apk/debug/*.apk /output/
 
@@ -192,6 +198,9 @@ def build_app(app):
                 else
                     npm install --ignore-scripts;
                 fi && \
+
+                # ---- stub missing parent package.json (monorepo metro configs) ----
+                [ ! -f ../package.json ] && cp package.json ../package.json 2>/dev/null || true && \
 
                 # ---- patch toReversed (Node <20 compat) ----
                 find node_modules -name "loadConfig.js" -path "*/metro-config/*" -exec sed -i 's/\.toReversed()/.slice().reverse()/g' {{}} \; 2>/dev/null || true && \
@@ -229,7 +238,14 @@ def build_app(app):
                 sed -i '/buildTypes/,/}}/s/release {{/release {{\n            signingConfig signingConfigs.debug/' app/build.gradle || true && \
 
                 # ---- build release apk ----
-                ./gradlew assembleRelease --no-daemon && \
+                ./gradlew assembleRelease --no-daemon || exit 1 && \
+                    
+                APK_PATH="app/build/outputs/apk/debug"
+
+                if ! ls $APK_PATH/*.apk 1> /dev/null 2>&1; then
+                    echo "ERROR: APK not generated"
+                    exit 1
+                fi
 
                 # ---- copy output ----
                 cp app/build/outputs/apk/release/*.apk /output/r8/
