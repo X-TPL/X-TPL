@@ -99,6 +99,8 @@ def build_app(app):
 
     out_dir = OUTPUT_DIR / app_id
     out_dir.mkdir(parents=True, exist_ok=True)
+    r8_dir = out_dir / "r8"
+    r8_dir.mkdir(parents=True, exist_ok=True)
     log_file = out_dir / "build.log"
     log_file.write_text("")
 
@@ -182,6 +184,13 @@ def build_app(app):
 
             # ---- android sdk path ----
             echo "sdk.dir=$ANDROID_HOME" > platforms/android/local.properties
+
+            # ---- enable ABI splits ----
+            if grep -q 'splits' platforms/android/app/build.gradle 2>/dev/null; then
+                sed -i 's/enable false/enable true/' platforms/android/app/build.gradle || true
+            else
+                sed -i '/^android[[:space:]]*{/a\    splits {\n        abi {\n            reset()\n            enable true\n            universalApk false\n            include "armeabi-v7a", "arm64-v8a", "x86", "x86_64"\n        }\n    }' platforms/android/app/build.gradle || true
+            fi
 
             # ---- build ----
             npx cordova build android --debug --no-interactive --verbose;
