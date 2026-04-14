@@ -212,6 +212,109 @@ def build_app(app):
                 "bash", "-c", bash_script
             ], log_file)
 
+            r8_script = r"""set -e
+            cd /app
+            rm -rf platforms plugins node_modules || true
+            rm -rf $GRADLE_USER_HOME || true
+            mkdir -p $GRADLE_USER_HOME
+
+            # unset Gradle options
+            unset JAVA_OPTS
+
+            # install deps
+            if [ -f yarn.lock ]; then
+                yarn install --ignore-scripts
+            else
+                npm install --ignore-scripts
+            fi
+
+            # ensure android platform
+            npx cordova platform add android
+            npx cordova prepare android
+
+            # ---- PATCH ROOT GRADLE FILES (CRITICAL FIX) ----
+            for f in platforms/android/build.gradle platforms/android/CordovaLib/build.gradle; do
+                if [ -f "$f" ]; then
+                    sed -i '/buildscript[[:space:]]*{/a\
+                repositories {\
+                    google()\
+                    mavenCentral()\
+                    maven { url "https://plugins.gradle.org/m2/" }\
+                    maven { url "https://maven.aliyun.com/repository/public" }\
+                    maven { url "https://jcenter.bintray.com/" }\
+                    maven { url "https://jitpack.io" }\
+                }\
+            ' "$f" || true
+
+                    sed -i '/allprojects[[:space:]]*{/a\
+                repositories {\
+                    google()\
+                    mavenCentral()\
+                    maven { url "https://plugins.gradle.org/m2/" }\
+                    maven { url "https://maven.aliyun.com/repository/public" }\
+                    maven { url "https://jcenter.bintray.com/" }\
+                    maven { url "https://jitpack.io" }\
+                }\
+            ' "$f" || true
+                fi
+            done
+
+            # ---- FIX versioncompare (very common failure) ----
+            grep -RIl 'com.g00fy2:versioncompare:1.3.4' platforms/android 2>/dev/null | \
+            xargs -r sed -i 's/com.g00fy2:versioncompare:1.3.4/io.github.g00fy2:versioncompare:1.5.0/g' || true
+
+            # ---- fix versioncompare imports (CRITICAL) ----
+            find platforms/android \( -name "*.gradle" -o -name "*.gradle.kts" \) -print0 | \
+            xargs -0 sed -i 's/import com\.g00fy2\.versioncompare\.Version/import io.github.g00fy2.versioncompare.Version/g' || true
+
+            # ---- OPTIONAL: remove illegal JVM args ----
+            find platforms/android -type f -exec sed -i 's/--illegal-access=permit//g' {} + || true
+
+            # ---- JDK 8 specific patch ----
+            if [ \"""" + str(jdk_version) + r"""\" = "8" ]; then
+                find platforms/android -name "build.gradle" -exec \
+                    sed -i 's/compileSdkVersion [0-9]\+/compileSdkVersion 30/g' {} \; || true
+
+                find platforms/android -name "build.gradle" -exec \
+                    sed -i 's/targetSdkVersion [0-9]\+/targetSdkVersion 30/g' {} \; || true
+            fi
+
+            # ---- android sdk path ----
+            echo "sdk.dir=$ANDROID_HOME" > platforms/android/local.properties
+
+            # ---- enable ABI splits ----
+            if grep -q 'splits' platforms/android/app/build.gradle 2>/dev/null; then
+                sed -i 's/enable false/enable true/' platforms/android/app/build.gradle || true
+            else
+                sed -i '/^android[[:space:]]*{/a\    splits {\n        abi {\n            reset()\n            enable true\n            universalApk false\n            include "armeabi-v7a", "arm64-v8a", "x86", "x86_64"\n        }\n    }' platforms/android/app/build.gradle || true
+            fi
+
+            # ---- enable R8 / minification ----
+            sed -i 's/minifyEnabled false/minifyEnabled true/' platforms/android/app/build.gradle || true
+
+            # ---- sign release with debug key ----
+            sed -i '/buildTypes/,/}/s/release {/release {\n            signingConfig signingConfigs.debug/' platforms/android/app/build.gradle || true
+
+            # ---- build release ----
+            npx cordova build android --release --no-interactive --verbose
+
+            cp platforms/android/app/build/outputs/apk/release/*.apk /output/r8/
+
+            # ---- copy TPL metadata ----
+            [ -f plugins/fetch.json ] && cp plugins/fetch.json /output/r8/ || true
+            [ -f platforms/android/app/build.gradle ] && cp platforms/android/app/build.gradle /output/r8/app-build.gradle || true
+            [ -f package-lock.json ] && cp package-lock.json /output/r8/ || true
+            [ -f yarn.lock ] && cp yarn.lock /output/r8/ || true
+            """
+            run([
+                "docker", "run", "--rm",
+                "-v", f"{app_path}:/app",
+                "-v", f"{out_dir}:/output",
+                "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
+                image_tag(node_version, jdk_version),
+                "bash", "-c", r8_script
+            ], log_file)
+
             run(
                 ["echo", f"Build succeeded with Node {node_version} and JDK {jdk_version}"],
                 log_file,
