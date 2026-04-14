@@ -175,52 +175,52 @@ def build_app(app):
             ], log_file)
 
             # ---- R8 release build ----
-            run([
-                "docker", "run", "--rm",
-                "-v", f"{app_path}:/app",
-                "-v", f"{out_dir}:/output",
-                "-v", f"{pathlib.Path.home()}/.nuget/packages:/root/.nuget/packages",
-                image_tag(dotnet_version, jdk_version),
-                "bash", "-c",
-                f"""
-                set -e
-                cd /app
-
-                # ---- clean stale outputs ----
-                rm -rf bin/ obj/ 2>/dev/null || true
-
-                # ---- restore packages ----
-                dotnet restore {csproj} --no-interactive || exit 1
-
-                # ---- build release APK with R8 and per-ABI splits ----
-                dotnet build {csproj} \
-                    -f net{dotnet_version}.0-android \
-                    -c Release \
-                    /p:AndroidCreatePackagePerAbi=true \
-                    /p:AndroidSupportedAbis="armeabi-v7a;arm64-v8a;x86;x86_64" \
-                    /p:AndroidUseSharedRuntime=false \
-                    /p:AndroidEnableProguard=true \
-                    /p:AndroidLinkMode=SdkOnly \
-                    /p:AndroidKeyStore=true \
-                    /p:AndroidSigningKeyStore=/root/.android/debug.keystore \
-                    /p:AndroidSigningKeyAlias=androiddebugkey \
-                    /p:AndroidSigningKeyPass=android \
-                    /p:AndroidSigningStorePass=android \
-                    --no-restore || exit 1
-
-                # ---- verify and copy APKs ----
-                APK_DIR="bin/Release/net{dotnet_version}.0-android"
-                if ! ls "$APK_DIR"/*.apk 1>/dev/null 2>&1; then
-                    echo "ERROR: No APKs found in $APK_DIR"
-                    exit 1
-                fi
-                cp "$APK_DIR"/*.apk /output/r8/
-
-                # ---- copy metadata ----
-                cp {csproj} /output/r8/ || true
-                [ -f packages.lock.json ] && cp packages.lock.json /output/r8/ || true
-                """
-            ], log_file)
+            #run([
+            #    "docker", "run", "--rm",
+            #    "-v", f"{app_path}:/app",
+            #    "-v", f"{out_dir}:/output",
+            #    "-v", f"{pathlib.Path.home()}/.nuget/packages:/root/.nuget/packages",
+            #    image_tag(dotnet_version, jdk_version),
+            #    "bash", "-c",
+            #    f"""
+            #    set -e
+            #    cd /app
+            #
+            #    # ---- clean stale outputs ----
+            #    rm -rf bin/ obj/ 2>/dev/null || true
+            #       
+            #    # ---- restore packages ----
+            #    dotnet restore {csproj} --no-interactive || exit 1
+            #
+            #    # ---- build release APK with R8 and per-ABI splits ----
+            #    dotnet build {csproj} \
+            #        -f net{dotnet_version}.0-android \
+            #        -c Release \
+            #        /p:AndroidCreatePackagePerAbi=true \
+            #        /p:AndroidSupportedAbis="armeabi-v7a;arm64-v8a;x86;x86_64" \
+            #        /p:AndroidUseSharedRuntime=false \
+            #        /p:AndroidEnableProguard=true \
+            #        /p:AndroidLinkMode=SdkOnly \
+            #        /p:AndroidKeyStore=true \
+            #        /p:AndroidSigningKeyStore=/root/.android/debug.keystore \
+            #        /p:AndroidSigningKeyAlias=androiddebugkey \
+            #        /p:AndroidSigningKeyPass=android \
+            #        /p:AndroidSigningStorePass=android \
+            #        --no-restore || exit 1
+            #
+            #    # ---- verify and copy APKs ----
+            #    APK_DIR="bin/Release/net{dotnet_version}.0-android"
+            #    if ! ls "$APK_DIR"/*.apk 1>/dev/null 2>&1; then
+            #        echo "ERROR: No APKs found in $APK_DIR"
+            #        exit 1
+            #    fi
+            #    cp "$APK_DIR"/*.apk /output/r8/
+            #   
+            #    # ---- copy metadata ----
+            #    cp {csproj} /output/r8/ || true
+            #    [ -f packages.lock.json ] && cp packages.lock.json /output/r8/ || true
+            #    """
+            #], log_file)
 
             run(
                 ["echo", f"Build succeeded with .NET {dotnet_version}"],
