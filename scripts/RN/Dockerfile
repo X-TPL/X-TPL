@@ -19,13 +19,9 @@ RUN apt-get update && apt-get install -y \
     curl \
     git \
     unzip \
-    xz-utils \
-    zip \
-    libglu1-mesa \
     ca-certificates \
     openjdk-${JDK_VERSION}-jdk \
     build-essential \
-    watchman \
     && rm -rf /var/lib/apt/lists/*
 
 # ---------- verify java ----------
