@@ -3,7 +3,6 @@ FROM ubuntu:22.04
 
 # ---------- build args ----------
 ARG FLUTTER_VERSION
-ARG ANDROID_SDK_VERSION=11076708
 ARG JDK_VERSION=17               
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -22,8 +21,6 @@ RUN apt-get update && apt-get install -y \
     curl \
     git \
     unzip \
-    xz-utils \
-    zip \
     libglu1-mesa \
     ca-certificates \
     openjdk-${JDK_VERSION}-jdk \
@@ -39,7 +36,7 @@ RUN mkdir -p $ANDROID_HOME/cmdline-tools
 RUN if [ "$JDK_VERSION" = "11" ]; then \
         SDK_URL="https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip"; \
     else \
-        SDK_URL="https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_SDK_VERSION}_latest.zip"; \
+        SDK_URL="https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"; \
     fi && \
     curl -4 -fsSL $SDK_URL -o /tmp/cmdline-tools.zip && \
     unzip /tmp/cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools && \
@@ -60,9 +57,6 @@ RUN git clone https://github.com/flutter/flutter.git \
     -b ${FLUTTER_VERSION} \
     --depth 1 \
     $FLUTTER_HOME
-
-# ---------- flutter doctor ----------
-RUN flutter doctor --android-licenses && flutter doctor
 
 # ---------- gradle sanity ----------
 ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false -Xmx4g"
