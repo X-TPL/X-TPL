@@ -65,7 +65,7 @@ def run(cmd, log_file: pathlib.Path, check=True):
                 text=True,
                 timeout=1800
             )
-        except subprocess.TimeoutExpired as e:
+        except subprocess.TimeoutExpired:
             f.write("\nERROR: Command timed out\n")
             raise
 
@@ -186,7 +186,7 @@ def ensure_image(flutter_version: str):
 
 def build_app(app):
     attempts = 0
-    max_attempts = 10
+    max_attempts = len(FLUTTER_VERSIONS)
     app_id = app["id"]
     flutter_version = app["flutter"]
     output_type = app.get("output", "apk")
@@ -217,12 +217,13 @@ def build_app(app):
 
             run([
                 "docker", "run", "--rm",
-                "-v", f"{app_path}:/app",
+                "-v", f"{app_path}:/source:ro",
                 "-v", f"{out_dir}:/output",
                 "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
                 image_tag(flutter_version, jdk_version),
                 "bash", "-c",
                 f"""
+                cp -r /source/. /app && \
                 cd /app && \
                 {assets} && \
                 flutter clean && \
@@ -239,12 +240,13 @@ def build_app(app):
             ], log_file)
             run([ # R8 obfuscation
                 "docker", "run", "--rm",
-                "-v", f"{app_path}:/app",
+                "-v", f"{app_path}:/source:ro",
                 "-v", f"{out_dir}:/output",
                 "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
                 image_tag(flutter_version, jdk_version),
                 "bash", "-c",
                 f"""
+                cp -r /source/. /app && \
                 cd /app && \
                 {assets} && \
                 flutter clean && \
@@ -262,12 +264,13 @@ def build_app(app):
             ], log_file)
             run([ # Flutter obfuscation
                 "docker", "run", "--rm",
-                "-v", f"{app_path}:/app",
+                "-v", f"{app_path}:/source:ro",
                 "-v", f"{out_dir}:/output",
                 "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
                 image_tag(flutter_version, jdk_version),
                 "bash", "-c",
                 f"""
+                cp -r /source/. /app && \
                 cd /app && \
                 {assets} && \
                 flutter clean && \

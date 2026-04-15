@@ -124,7 +124,7 @@ def build_app(app):
 
             run([
                 "docker", "run", "--rm",
-                "-v", f"{app_path}:/app",
+                "-v", f"{app_path}:/source:ro",
                 "-v", f"{out_dir}:/output",
                 "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
                 image_tag(node_version, jdk_version),
@@ -132,6 +132,7 @@ def build_app(app):
                 f"""
                 set -e
 
+                cp -r /source/. /app && \
                 cd /app && \
 
                 # ---- install deps (yarn or npm) ----
@@ -142,7 +143,7 @@ def build_app(app):
                 fi && \
 
                 # ---- detect expo ----
-                if grep -q '"expo"' package.json; then
+                if grep -q '"expo"' package.json && [ ! -d android ]; then
                     echo "Expo project detected";
                     CI=1 npx expo prebuild --platform android
                 fi && \
@@ -182,7 +183,7 @@ def build_app(app):
 
             run([
                 "docker", "run", "--rm",
-                "-v", f"{app_path}:/app",
+                "-v", f"{app_path}:/source:ro",
                 "-v", f"{out_dir}:/output",
                 "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
                 image_tag(node_version, jdk_version),
@@ -190,6 +191,7 @@ def build_app(app):
                 f"""
                 set -e
 
+                cp -r /source/. /app && \
                 cd /app && \
 
                 # ---- install deps (yarn or npm) ----
@@ -215,7 +217,7 @@ def build_app(app):
                 fi && \
 
                 # ---- detect expo ----
-                if grep -q '"expo"' package.json; then
+                if grep -q '"expo"' package.json && [ ! -d android ]; then
                     echo "Expo project detected";
                     CI=1 npx expo prebuild --platform android
                 fi && \

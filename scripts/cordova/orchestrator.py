@@ -114,6 +114,7 @@ def build_app(app):
 
             ensure_image(node_version, jdk_version)
             bash_script = r"""set -e
+            cp -r /source/. /app
             cd /app
             rm -rf platforms plugins node_modules || true
             rm -rf $GRADLE_USER_HOME || true
@@ -205,7 +206,7 @@ def build_app(app):
             """
             run([
                 "docker", "run", "--rm",
-                "-v", f"{app_path}:/app",
+                "-v", f"{app_path}:/source:ro",
                 "-v", f"{out_dir}:/output",
                 "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
                 image_tag(node_version, jdk_version),
@@ -213,6 +214,7 @@ def build_app(app):
             ], log_file)
 
             r8_script = r"""set -e
+            cp -r /source/. /app
             cd /app
             rm -rf platforms plugins node_modules || true
             rm -rf $GRADLE_USER_HOME || true
@@ -308,7 +310,7 @@ def build_app(app):
             """
             run([
                 "docker", "run", "--rm",
-                "-v", f"{app_path}:/app",
+                "-v", f"{app_path}:/source:ro",
                 "-v", f"{out_dir}:/output",
                 "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
                 image_tag(node_version, jdk_version),

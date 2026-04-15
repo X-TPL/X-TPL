@@ -136,17 +136,15 @@ def build_app(app):
             # ---- debug build ----
             run([
                 "docker", "run", "--rm",
-                "-v", f"{app_path}:/app",
+                "-v", f"{app_path}:/source:ro",
                 "-v", f"{out_dir}:/output",
                 "-v", f"{pathlib.Path.home()}/.nuget/packages:/root/.nuget/packages",
                 image_tag(dotnet_version, jdk_version),
                 "bash", "-c",
                 f"""
                 set -e
+                cp -r /source/. /app
                 cd /app
-
-                # ---- clean stale outputs ----
-                rm -rf bin/ obj/ 2>/dev/null || true
 
                 # ---- restore packages ----
                 dotnet restore {csproj} --no-interactive || exit 1
