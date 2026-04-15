@@ -240,7 +240,7 @@ def build_app(app):
                 # ---- build release apk ----
                 ./gradlew assembleRelease --no-daemon || exit 1 && \
                     
-                APK_PATH="app/build/outputs/apk/debug"
+                APK_PATH="app/build/outputs/apk/release"
 
                 if ! ls $APK_PATH/*.apk 1> /dev/null 2>&1; then
                     echo "ERROR: APK not generated"
