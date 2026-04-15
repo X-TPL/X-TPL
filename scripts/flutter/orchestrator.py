@@ -1,9 +1,10 @@
-import subprocess
 import yaml
 import pathlib
 import threading
-import os
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).parent.parent))
+from scripts.common.helpers import run, load_manifest, image_exists, run_builds
 
 ROOT = pathlib.Path(__file__).parent.resolve()
 OUTPUT_DIR = ROOT / "output"
@@ -52,33 +53,6 @@ def next_flutter_version(current: str):
         return FLUTTER_VERSIONS[idx + 1]
 
     return None
-
-def run(cmd, log_file: pathlib.Path, check=True):
-    with log_file.open("a") as f:
-        f.write("\n> " + " ".join(cmd) + "\n")
-
-        try:
-            result = subprocess.run(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                timeout=1800
-            )
-        except subprocess.TimeoutExpired:
-            f.write("\nERROR: Command timed out\n")
-            raise
-
-        f.write(result.stdout)
-
-        if check and result.returncode != 0:
-            raise subprocess.CalledProcessError(result.returncode, cmd)
-
-
-
-def load_manifest():
-    with open(ROOT / "build_manifest.yaml") as f:
-        return yaml.safe_load(f)["apps"]
 
 
 def get_missing_assets(app_path: pathlib.Path):
@@ -142,15 +116,6 @@ def pick_jdk(flutter_version: str) -> int:
 
 def image_tag(flutter_version: str, jdk_version: int) -> str:
     return f"{IMAGE_PREFIX}:{flutter_version}-jdk{jdk_version}"
-
-
-def image_exists(tag: str) -> bool:
-    result = subprocess.run(
-        ["docker", "image", "inspect", tag],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-    return result.returncode == 0
 
 
 def ensure_image(flutter_version: str):
@@ -317,20 +282,8 @@ def build_app(app):
 # ---------- main ----------
 
 def main():
-    apps = load_manifest()
-    OUTPUT_DIR.mkdir(exist_ok=True)
-
-    max_parallel = max(1, (os.cpu_count() or 2) // 2)
-    futures = []
-    with ThreadPoolExecutor(max_workers=max_parallel) as pool:
-        for app in apps:
-            futures.append(pool.submit(build_app, app))
-
-        for future in as_completed(futures):
-            try:
-                future.result()  # raises exception if build_app failed
-            except Exception as e:
-                print(f"[executor error] {e}")
+    apps = load_manifest(ROOT)
+    run_builds(build_app, apps, OUTPUT_DIR)
 
 
 if __name__ == "__main__":

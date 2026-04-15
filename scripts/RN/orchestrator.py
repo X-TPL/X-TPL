@@ -1,49 +1,17 @@
-import subprocess
-import yaml
 import pathlib
 import threading
-import os
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).parent.parent))
+from scripts.common.helpers import run, load_manifest, image_exists, run_builds  # noqa: F401
 
 ROOT = pathlib.Path(__file__).parent.resolve()
 OUTPUT_DIR = ROOT / "output"
 DOCKERFILE_DIR = ROOT
 GLOBAL_LOG = OUTPUT_DIR / "build.log"
 IMAGE_PREFIX = "react-android"
-BUILD_LOCKS = {}  # (node_version , jdk_version) -> Lock
+BUILD_LOCKS = {}  # (node_version, jdk_version) -> Lock
 GLOBAL_LOCK = threading.Lock()
-
-
-
-# ---------- helpers ----------
-
-
-def run(cmd, log_file: pathlib.Path, check=True):
-    with log_file.open("a") as f:
-        f.write("\n> " + " ".join(cmd) + "\n")
-
-        try:
-            result = subprocess.run(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                timeout=7200
-            )
-        except subprocess.TimeoutExpired as e:
-            f.write("\nERROR: Command timed out\n")
-            raise
-
-        f.write(result.stdout)
-
-        if check and result.returncode != 0:
-            raise subprocess.CalledProcessError(result.returncode, cmd)
-
-
-
-def load_manifest():
-    with open(ROOT / "build_manifest.yaml") as f:
-        return yaml.safe_load(f)["apps"]
 
 def pick_next_node_version(node):
     node = str(node)
@@ -57,15 +25,6 @@ def pick_next_node_version(node):
 
 def image_tag(node_version: str, jdk_version: int) -> str:
     return f"{IMAGE_PREFIX}:{node_version}-jdk{jdk_version}"
-
-
-def image_exists(tag: str) -> bool:
-    result = subprocess.run(
-        ["docker", "image", "inspect", tag],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-    return result.returncode == 0
 
 
 def ensure_image(node_version: str, jdk_version: str):
@@ -282,20 +241,8 @@ def build_app(app):
 # ---------- main ----------
 
 def main():
-    apps = load_manifest()
-    OUTPUT_DIR.mkdir(exist_ok=True)
-
-    max_parallel = max(1, (os.cpu_count() or 2) // 2)
-    futures = []
-    with ThreadPoolExecutor(max_workers=max_parallel) as pool:
-        for app in apps:
-            futures.append(pool.submit(build_app, app))
-
-        for future in as_completed(futures):
-            try:
-                future.result()  # raises exception if build_app failed
-            except Exception as e:
-                print(f"[executor error] {e}")
+    apps = load_manifest(ROOT)
+    run_builds(build_app, apps, OUTPUT_DIR)
 
 
 if __name__ == "__main__":
