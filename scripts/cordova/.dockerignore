@@ -1,2 +1,6 @@
-android/.gradle
-.gradle
+output/
+repos.json
+build_manifest.yaml
+__pycache__/
+*.pyc
+*.py
