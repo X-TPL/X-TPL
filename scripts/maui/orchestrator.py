@@ -150,6 +150,9 @@ def build_app(app):
                 sed -i 's|<TargetFrameworks>[^<]*</TargetFrameworks>|<TargetFrameworks>net{dotnet_version}.0-android</TargetFrameworks>|' {csproj} 2>/dev/null || true
                 sed -i 's|<TargetFramework>[^<]*</TargetFramework>|<TargetFramework>net{dotnet_version}.0-android</TargetFramework>|' {csproj} 2>/dev/null || true
 
+                # ---- clean incomplete NuGet package extractions (corrupted host cache) ----
+                find /root/.nuget/packages -mindepth 2 -maxdepth 2 -type d -exec sh -c '[ ! -f "$1/.nupkg.metadata" ] && rm -rf "$1" || true' _ {{}} \; 2>/dev/null || true
+
                 # ---- restore packages ----
                 dotnet restore {csproj} || exit 1
 
@@ -158,7 +161,7 @@ def build_app(app):
                     -f net{dotnet_version}.0-android \
                     -c Debug \
                     /p:AndroidCreatePackagePerAbi=true \
-                    /p:AndroidSupportedAbis="armeabi-v7a;arm64-v8a;x86;x86_64" \
+                    "/p:AndroidSupportedAbis=armeabi-v7a%3Barm64-v8a%3Bx86%3Bx86_64" \
                     /p:AndroidUseSharedRuntime=false \
                     --no-restore || exit 1
 
@@ -193,6 +196,9 @@ def build_app(app):
             #    sed -i 's|<TargetFrameworks>[^<]*</TargetFrameworks>|<TargetFrameworks>net{dotnet_version}.0-android</TargetFrameworks>|' {csproj} 2>/dev/null || true
             #    sed -i 's|<TargetFramework>[^<]*</TargetFramework>|<TargetFramework>net{dotnet_version}.0-android</TargetFramework>|' {csproj} 2>/dev/null || true
 #
+            #    # ---- clean incomplete NuGet package extractions (corrupted host cache) ----
+            #    find /root/.nuget/packages -mindepth 2 -maxdepth 2 -type d -exec sh -c '[ ! -f "$1/.nupkg.metadata" ] && rm -rf "$1" || true' _ {{}} \; 2>/dev/null || true
+#
             #    # ---- restore packages ----
             #    dotnet restore {csproj} || exit 1
 #
@@ -201,7 +207,7 @@ def build_app(app):
             #        -f net{dotnet_version}.0-android \
             #        -c Release \
             #        /p:AndroidCreatePackagePerAbi=true \
-            #        /p:AndroidSupportedAbis="armeabi-v7a;arm64-v8a;x86;x86_64" \
+            #        "/p:AndroidSupportedAbis=armeabi-v7a%3Barm64-v8a%3Bx86%3Bx86_64" \
             #        /p:AndroidUseSharedRuntime=false \
             #        /p:AndroidEnableProguard=true \
             #        /p:AndroidLinkMode=SdkOnly \
