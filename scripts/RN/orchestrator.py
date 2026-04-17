@@ -166,8 +166,15 @@ def build_app(app):
                 # ---- patch toReversed (Node <20 compat) ----
                 find node_modules -name "loadConfig.js" -path "*/metro-config/*" -exec sed -i 's/\.toReversed()/.slice().reverse()/g' {{}} \; 2>/dev/null || true && \
 
-                # ---- patch ESM-only metro config deps ----
-                if grep -q 'react-native-monorepo-config' metro.config.js 2>/dev/null; then \
+                # ---- patch missing expo/AppEntry ----
+                if grep -q '"main".*expo/AppEntry' package.json 2>/dev/null && \
+                   [ ! -f node_modules/expo/AppEntry.js ] && [ ! -f node_modules/expo/AppEntry.ts ]; then \
+                    node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json','utf8')); if(fs.existsSync('index.js')){{p.main='index.js'; fs.writeFileSync('package.json',JSON.stringify(p,null,2));}}" 2>/dev/null || true; \
+                fi && \
+
+                # ---- patch broken metro config (ESM-only or null-returning) ----
+                if grep -q 'react-native-monorepo-config' metro.config.js 2>/dev/null || \
+                   ! node -e "const c=require('./metro.config.js'); if(!c||typeof c!=='object') process.exit(1);" 2>/dev/null; then \
                     if [ -d node_modules/@react-native/metro-config ]; then \
                         printf 'const {{getDefaultConfig, mergeConfig}} = require("@react-native/metro-config");\nmodule.exports = mergeConfig(getDefaultConfig(__dirname), {{}});\n' > metro.config.js; \
                     else \
@@ -181,9 +188,16 @@ def build_app(app):
                     CI=1 npx expo prebuild --platform android
                 fi && \
 
+                # ---- stub missing metro watchFolders paths ----
+                mkdir -p /src 2>/dev/null || true && \
+
                 cd android && \
 
                 chmod +x gradlew && \
+
+                # ---- disable Sentry source map upload (no credentials in CI) ----
+                export SENTRY_DISABLE_AUTO_UPLOAD=true && \
+                echo "sentryUploadEnabled=false" >> gradle.properties 2>/dev/null || true && \
 
                 # ---- enable ABI splits ----
                 if grep -q 'splits' app/build.gradle 2>/dev/null; then \
