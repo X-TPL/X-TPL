@@ -2,7 +2,7 @@ import pathlib
 import threading
 import sys
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent.parent))
+sys.path.insert(0, str(pathlib.Path(__file__).parent.parent.parent))
 from scripts.common.helpers import run, load_manifest, image_exists, run_builds  # noqa: F401
 
 ROOT = pathlib.Path(__file__).parent.resolve()
