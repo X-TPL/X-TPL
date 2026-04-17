@@ -1,24 +1,47 @@
 # Errors
+C/C++: CMake Error in /app/node_modules/react-native-screens/android/src/main/jni/CMakeLists.txt:
+C/C++:   Imported target "ReactAndroid::reactnative" includes non-existent path
+C/C++:     "/opt/gradle/caches/8.14.3/transforms/e7c5cf7bb7113a9cd8af3df63ab4ec8f/transformed/react-android-0.81.4-debu>
+C/C++:   in its INTERFACE_INCLUDE_DIRECTORIES.  Possible reasons include:
+C/C++:   * The path was deleted, renamed, or moved to another location.
+C/C++:   * An install or uninstall procedure did not complete successfully.
+C/C++:   * The installation package was faulty and references files it does not
+C/C++:   provide.
+C/C++: CMake Error in /app/node_modules/react-native-worklets/android/build/generated/source/codegen/jni/CMakeLists.txt:
+C/C++:   Imported target "fbjni::fbjni" includes non-existent path
+C/C++:     "/opt/gradle/caches/8.14.3/transforms/57eed124da95de5e0d0e6329b95f862e/transformed/fbjni-0.7.0/prefab/module>
+C/C++:   in its INTERFACE_INCLUDE_DIRECTORIES.  Possible reasons include:
+C/C++:   * The path was deleted, renamed, or moved to another location.
+C/C++:   * An install or uninstall procedure did not complete successfully.
+C/C++:   * The installation package was faulty and references files it does not
+C/C++:   provide.
+C/C++: CMake Generate step failed.  Build files cannot be regenerated correctly.
+C/C++: ninja: error: rebuilding 'build.ninja': subcommand failed
 
-- File google-services.json is missing
-- Error: [android.dangerous]: withAndroidDangerousBaseMod: [expo-notifications] Resource name "default" is not valid.Android resource names must start with a letter and contain only lowercase a-z, 0-9, or underscore characters.
-- java.lang.NoClassDefFoundError: Could not initialize class org.codehaus.groovy.vmplugin.v7.Java7
-- Could not read /app/node_modules/expo-modules-core/android/build/downloads/boost_1_76_0.tar.gz. > Not in GZIP format
-- Error: [android.dangerous]: withAndroidDangerousBaseMod: ENOENT: no such file or directory, open './assets/adaptive-icon.png'
-- Failed to apply plugin 'expo-root-project'. Key 1.9.25 is missing in the map.$
-- WARNING: The legacy expo-cli does not support Node +17.Cannot determine which native SDK version your project uses because the module `expo` is not installed
-- Could not set unknown property 'enableBundleCompression' for extension 'react' of type com.facebook.react.ReactExtension
-- Can't find KSP version for Kotlin version '1.9.24'. You're probably using an unsupported version of Kotlin. Supported versions are: '2.2.20, 2.2.10, 2.2.0, 2.1.21, 2.1.20, 2.1.10, 2.1.0, 2.0.21, 2.0.20, 2.0.10, 2.0.0
-- chmod: cannot access 'gradlew': No such file or directory
-- No patch files found .env doesn't exists
-- Error: [android.dangerous]: withAndroidDangerousBaseMod: Could not find MIME for Buffer <null>
-- java.lang.IllegalArgumentException: Unsupported class file major version 61
-- Error: Autolinking is not set up in `settings.gradle`: expo modules won't be autolinked.
-- Could not set unknown property 'classifier' for task ':expo-constants:androidSourcesJar' of type org.gradle.api.tasks
-- npm error Unsupported URL Type "workspace:": workspace:*
-- > [CXX1300] CMake '3.25.0' or higher was not found in SDK, PATH, or by cmake.dir property.
-- Could not get unknown property 'android' for task ':app:adbReverseMetro' of type org.gradle.api.DefaultTask.
-- Cannot determine which native SDK version your project uses because the module `expo` is not installed
+Error: [android.dangerous]: withAndroidDangerousBaseMod: Cannot copy google-services.json from /app/google-services.json to /app/android/app/google-services.json. Ensure the source and destination paths exist.
+Error: [android.dangerous]: withAndroidDangerousBaseMod: Cannot copy google-services.json from /app/google-services.json to /app/android/app/google-services.json. Ensure the source and destination paths exist.
+at setGoogleServicesFile (/app/node_modules/@expo/config-plugins/build/android/GoogleServices.js:100:11)
+at async /app/node_modules/@expo/config-plugins/build/android/GoogleServices.js:81:5
+at async action (/app/node_modules/@expo/config-plugins/build/plugins/withMod.js:199:23)
+at async interceptingMod (/app/node_modules/@expo/config-plugins/build/plugins/withMod.js:104:21)
+at async interceptingMod (/app/node_modules/@expo/config-plugins/build/plugins/withMod.js:104:21)
+at async interceptingMod (/app/node_modules/@expo/config-plugins/build/plugins/withMod.js:104:21)
+at async action (/app/node_modules/@expo/config-plugins/build/plugins/createBaseMod.js:60:21)
+at async interceptingMod (/app/node_modules/@expo/config-plugins/build/plugins/withMod.js:104:21)
+at async evalModsAsync (/app/node_modules/@expo/config-plugins/build/plugins/mod-compiler.js:206:25)
+at async compileModsAsync (/app/node_modules/@expo/config-plugins/build/plugins/mod-compiler.js:123:10)
+
+
+
+FAILURE: Build failed with an exception.
+
+* Where:
+Settings file '/app/android/settings.gradle' line: 3
+
+* What went wrong:
+A problem occurred evaluating settings 'android'.
+> Process 'command 'npx'' finished with non-zero exit value 1
+
 # Values
 
 directories: 483
@@ -43,4 +66,28 @@ built: 315
 # typescript
 
 build entries: 566
+apks: 1062
+repos built: 213
+split not working: 6
 
+try2:
+apks: 1329
+repos built: 208
+split not working: still 6
+r8 not working: 73
+1 FastComments-fastcomments-react-native-sdk/
+1 Leogendra-Pixood/
+1 callstack-react-native-pager-view/
+1 funnyzak-react-native-v2ex/
+1 uiwjs-react-native-uiw/
+1 zhbhun-react-native-intersection-observer/
+
+try3: 
+apks: 1371
+repos built: 211
+split not working: 5
+r8 not working: 69
+
+try4:
+apks: 1467
+repos built: 224
