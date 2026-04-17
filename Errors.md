@@ -38,6 +38,11 @@ To delete dictionaries with a certain keyword: grep -rl "npm error" . | xargs -n
 
 To delete all dictionaries with an apk: find . -type f -name "*.apk" -exec dirname {} \; | sort -u | xargs rm -rf
 
+To find folders with less than 3 apks in the main dir: for d in */; do count=$(find "$d" -maxdepth 1 -name "*.apk" | wc -l); [ "$count" -gt 0 ] && [ "$count" -lt 3 ] && echo "$count $d"; done
+
+To find folders with less than 9 apks (recursively): for d in */; do count=$(find "$d" -name "*.apk" | wc -l); [ "$count" -gt 0 ] && [ "$count" -lt 9 ] && echo "$count $d"; done
+
+
 ## values
 
 25.02. 36/79
