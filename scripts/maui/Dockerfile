@@ -63,7 +63,11 @@ RUN yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 RUN $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
     "platform-tools" \
     "platforms;android-34" \
-    "build-tools;34.0.0"
+    "platforms;android-35" \
+    "platforms;android-36" \
+    "build-tools;34.0.0" \
+    "build-tools;35.0.0" \
+    "build-tools;36.0.0"
 
 # ---------- .NET MAUI Android workload ----------
 RUN dotnet workload install maui-android --skip-sign-check
