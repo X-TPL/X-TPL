@@ -147,7 +147,7 @@ def build_app(app):
                 cd /app
 
                 # ---- restore packages ----
-                dotnet restore {csproj} --no-interactive || exit 1
+                dotnet restore {csproj} || exit 1
 
                 # ---- build debug APK with per-ABI splits ----
                 dotnet build {csproj} \
@@ -188,7 +188,7 @@ def build_app(app):
             #    rm -rf bin/ obj/ 2>/dev/null || true
             #       
             #    # ---- restore packages ----
-            #    dotnet restore {csproj} --no-interactive || exit 1
+            #    dotnet restore {csproj} || exit 1
             #
             #    # ---- build release APK with R8 and per-ABI splits ----
             #    dotnet build {csproj} \
