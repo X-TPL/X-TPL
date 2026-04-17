@@ -146,6 +146,10 @@ def build_app(app):
                 cp -r /source/. /app
                 cd /app
 
+                # ---- strip non-android target frameworks (avoids missing iOS/macOS workload errors) ----
+                sed -i 's|<TargetFrameworks>[^<]*</TargetFrameworks>|<TargetFrameworks>net{dotnet_version}.0-android</TargetFrameworks>|' {csproj} 2>/dev/null || true
+                sed -i 's|<TargetFramework>[^<]*</TargetFramework>|<TargetFramework>net{dotnet_version}.0-android</TargetFramework>|' {csproj} 2>/dev/null || true
+
                 # ---- restore packages ----
                 dotnet restore {csproj} || exit 1
 
@@ -175,21 +179,23 @@ def build_app(app):
             # ---- R8 release build ----
             #run([
             #    "docker", "run", "--rm",
-            #    "-v", f"{app_path}:/app",
+            #    "-v", f"{app_path}:/source:ro",
             #    "-v", f"{out_dir}:/output",
             #    "-v", f"{pathlib.Path.home()}/.nuget/packages:/root/.nuget/packages",
             #    image_tag(dotnet_version, jdk_version),
             #    "bash", "-c",
             #    f"""
             #    set -e
+            #    cp -r /source/. /app
             #    cd /app
-            #
-            #    # ---- clean stale outputs ----
-            #    rm -rf bin/ obj/ 2>/dev/null || true
-            #       
+#
+            #    # ---- strip non-android target frameworks ----
+            #    sed -i 's|<TargetFrameworks>[^<]*</TargetFrameworks>|<TargetFrameworks>net{dotnet_version}.0-android</TargetFrameworks>|' {csproj} 2>/dev/null || true
+            #    sed -i 's|<TargetFramework>[^<]*</TargetFramework>|<TargetFramework>net{dotnet_version}.0-android</TargetFramework>|' {csproj} 2>/dev/null || true
+#
             #    # ---- restore packages ----
             #    dotnet restore {csproj} || exit 1
-            #
+#
             #    # ---- build release APK with R8 and per-ABI splits ----
             #    dotnet build {csproj} \
             #        -f net{dotnet_version}.0-android \
@@ -205,7 +211,7 @@ def build_app(app):
             #        /p:AndroidSigningKeyPass=android \
             #        /p:AndroidSigningStorePass=android \
             #        --no-restore || exit 1
-            #
+#
             #    # ---- verify and copy APKs ----
             #    APK_DIR="bin/Release/net{dotnet_version}.0-android"
             #    if ! ls "$APK_DIR"/*.apk 1>/dev/null 2>&1; then
@@ -213,7 +219,7 @@ def build_app(app):
             #        exit 1
             #    fi
             #    cp "$APK_DIR"/*.apk /output/r8/
-            #   
+#
             #    # ---- copy metadata ----
             #    cp {csproj} /output/r8/ || true
             #    [ -f packages.lock.json ] && cp packages.lock.json /output/r8/ || true
