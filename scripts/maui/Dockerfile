@@ -65,8 +65,8 @@ RUN $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
     "platforms;android-34" \
     "build-tools;34.0.0"
 
-# ---------- .NET Android workload ----------
-RUN dotnet workload install android --skip-sign-check
+# ---------- .NET MAUI Android workload ----------
+RUN dotnet workload install maui-android --skip-sign-check
 
 # ---------- pre-generate debug keystore (used for release signing) ----------
 RUN mkdir -p /root/.android && \
