@@ -96,9 +96,14 @@ def build_app(app):
 
                 # ---- install deps (yarn or npm) ----
                 if [ -f yarn.lock ]; then
-                    yarn install --ignore-scripts;
+                    yarn install;
                 else
                     npm install --ignore-scripts;
+                fi && \
+
+                # ---- stub missing google-services.json (Firebase/Expo prebuild) ----
+                if [ ! -f google-services.json ]; then \
+                    python3 -c "import json; open('google-services.json','w').write(json.dumps({{'project_info':{{'project_number':'000000000000','project_id':'stub','storage_bucket':'stub.appspot.com'}},'client':[{{'client_info':{{'mobilesdk_app_id':'1:000000000000:android:0000000000000000','android_client_info':{{'package_name':'com.stub'}}}},'oauth_client':[],'api_key':[{{'current_key':'stub'}}],'services':{{'appinvite_service':{{'other_platform_oauth_client':[]}}}}}}],'configuration_version':'1'}}))" 2>/dev/null || true; \
                 fi && \
 
                 # ---- detect expo ----
@@ -108,11 +113,18 @@ def build_app(app):
                 fi && \
 
                 cd android && \
-                
+
                 chmod +x gradlew && \
-                
+
+                # ---- patch settings.gradle to use local react-native CLI (avoids npx failures) ----
+                sed -i 's/autolinkLibrariesFromCommand()/autolinkLibrariesFromCommand("node node_modules\/.bin\/react-native config")/' settings.gradle 2>/dev/null || true && \
+                sed -i 's/autolinkLibrariesWithCommand()/autolinkLibrariesWithCommand("node node_modules\/.bin\/react-native config")/' settings.gradle 2>/dev/null || true && \
+
                 # ---- clean gradle ----
                 (./gradlew clean || true) && \
+
+                # ---- pre-resolve AAR transforms so CMake finds prefab paths ----
+                ./gradlew :app:dependencies --configuration debugCompileClasspath --no-daemon > /dev/null 2>&1 || true && \
 
                 # ---- enable ABI splits ----
                 if grep -q 'splits' app/build.gradle 2>/dev/null; then \
@@ -155,7 +167,7 @@ def build_app(app):
 
                 # ---- install deps (yarn or npm) ----
                 if [ -f yarn.lock ]; then
-                    yarn install --ignore-scripts;
+                    yarn install;
                 else
                     npm install --ignore-scripts;
                 fi && \
@@ -182,6 +194,11 @@ def build_app(app):
                     fi; \
                 fi && \
 
+                # ---- stub missing google-services.json (Firebase/Expo prebuild) ----
+                if [ ! -f google-services.json ]; then \
+                    python3 -c "import json; open('google-services.json','w').write(json.dumps({{'project_info':{{'project_number':'000000000000','project_id':'stub','storage_bucket':'stub.appspot.com'}},'client':[{{'client_info':{{'mobilesdk_app_id':'1:000000000000:android:0000000000000000','android_client_info':{{'package_name':'com.stub'}}}},'oauth_client':[],'api_key':[{{'current_key':'stub'}}],'services':{{'appinvite_service':{{'other_platform_oauth_client':[]}}}}}}],'configuration_version':'1'}}))" 2>/dev/null || true; \
+                fi && \
+
                 # ---- detect expo ----
                 if grep -q '"expo"' package.json && [ ! -d android ]; then
                     echo "Expo project detected";
@@ -194,6 +211,10 @@ def build_app(app):
                 cd android && \
 
                 chmod +x gradlew && \
+
+                # ---- patch settings.gradle to use local react-native CLI (avoids npx failures) ----
+                sed -i 's/autolinkLibrariesFromCommand()/autolinkLibrariesFromCommand("node node_modules\/.bin\/react-native config")/' settings.gradle 2>/dev/null || true && \
+                sed -i 's/autolinkLibrariesWithCommand()/autolinkLibrariesWithCommand("node node_modules\/.bin\/react-native config")/' settings.gradle 2>/dev/null || true && \
 
                 # ---- disable Sentry source map upload (no credentials in CI) ----
                 export SENTRY_DISABLE_AUTO_UPLOAD=true && \
@@ -211,6 +232,9 @@ def build_app(app):
 
                 # ---- sign release with debug key ----
                 sed -i '/buildTypes/,/}}/s/release {{/release {{\n            signingConfig signingConfigs.debug/' app/build.gradle || true && \
+
+                # ---- pre-resolve AAR transforms so CMake finds prefab paths ----
+                ./gradlew :app:dependencies --configuration releaseCompileClasspath --no-daemon > /dev/null 2>&1 || true && \
 
                 # ---- build release apk ----
                 ./gradlew assembleRelease --no-daemon || exit 1 && \
