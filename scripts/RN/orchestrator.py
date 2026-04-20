@@ -112,12 +112,12 @@ def build_app(app):
                     CI=1 npx expo prebuild --platform android
                 fi && \
 
+                export PATH="/app/node_modules/.bin:$PATH" && \
                 cd android && \
 
                 chmod +x gradlew && \
 
                 # ---- patch settings.gradle to use local react-native CLI (avoids npx failures) ----
-                sed -i 's/autolinkLibrariesFromCommand()/autolinkLibrariesFromCommand("node node_modules\/.bin\/react-native config")/' settings.gradle 2>/dev/null || true && \
                 sed -i 's/autolinkLibrariesWithCommand()/autolinkLibrariesWithCommand("node node_modules\/.bin\/react-native config")/' settings.gradle 2>/dev/null || true && \
 
                 # ---- clean gradle ----
@@ -208,12 +208,18 @@ def build_app(app):
                 # ---- stub missing metro watchFolders paths ----
                 mkdir -p /src 2>/dev/null || true && \
 
+                # ---- ensure TypeScript babel support (fixes 'interface' SyntaxError in metro bundling) ----
+                if [ -d node_modules/babel-preset-expo ]; then \
+                    grep -ql "expo\|typescript" babel.config.js .babelrc .babelrc.js babel.config.json 2>/dev/null || \
+                    printf 'module.exports=function(api){{api.cache(true);return{{presets:["babel-preset-expo"]}};}};\n' > babel.config.js; \
+                fi && \
+
+                export PATH="/app/node_modules/.bin:$PATH" && \
                 cd android && \
 
                 chmod +x gradlew && \
 
                 # ---- patch settings.gradle to use local react-native CLI (avoids npx failures) ----
-                sed -i 's/autolinkLibrariesFromCommand()/autolinkLibrariesFromCommand("node node_modules\/.bin\/react-native config")/' settings.gradle 2>/dev/null || true && \
                 sed -i 's/autolinkLibrariesWithCommand()/autolinkLibrariesWithCommand("node node_modules\/.bin\/react-native config")/' settings.gradle 2>/dev/null || true && \
 
                 # ---- disable Sentry source map upload (no credentials in CI) ----
