@@ -209,7 +209,7 @@ def build_app(app):
                     /p:AndroidCreatePackagePerAbi=true \
                     "/p:AndroidSupportedAbis=armeabi-v7a%3Barm64-v8a%3Bx86%3Bx86_64" \
                     /p:AndroidUseSharedRuntime=false \
-                    /p:AndroidEnableProguard=true \
+                    /p:AndroidLinkTool=r8 \
                     /p:AndroidLinkMode=SdkOnly \
                     /p:AndroidKeyStore=true \
                     /p:AndroidSigningKeyStore=/root/.android/debug.keystore \
