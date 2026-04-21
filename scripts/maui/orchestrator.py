@@ -202,30 +202,30 @@ def build_app(app):
                     dotnet restore {csproj} || exit 1
                 fi
 
-                # ---- build release APK with R8 and per-ABI splits ----
-                dotnet build {csproj} \
-                    -f net{dotnet_version}.0-android \
-                    -c Release \
-                    /p:AndroidPackageFormat=apk \
-                    /p:AndroidCreatePackagePerAbi=true \
-                    "/p:AndroidSupportedAbis=armeabi-v7a%3Barm64-v8a%3Bx86%3Bx86_64" \
-                    /p:AndroidUseSharedRuntime=false \
-                    /p:AndroidLinkTool=r8 \
-                    /p:AndroidLinkMode=SdkOnly \
-                    /p:AndroidKeyStore=true \
-                    /p:AndroidSigningKeyStore=/root/.android/debug.keystore \
-                    /p:AndroidSigningKeyAlias=androiddebugkey \
-                    /p:AndroidSigningKeyPass=android \
-                    /p:AndroidSigningStorePass=android \
-                    --no-restore || exit 1
+                # ---- build release APKs per-ABI via RuntimeIdentifier ----
+                for ABI_RID in android-arm android-arm64 android-x86 android-x64; do
+                    dotnet build {csproj} \
+                        -f net{dotnet_version}.0-android \
+                        -c Release \
+                        -r $ABI_RID \
+                        /p:AndroidPackageFormat=apk \
+                        /p:AndroidUseSharedRuntime=false \
+                        /p:AndroidLinkTool=r8 \
+                        /p:AndroidLinkMode=SdkOnly \
+                        /p:AndroidKeyStore=true \
+                        /p:AndroidSigningKeyStore=/root/.android/debug.keystore \
+                        /p:AndroidSigningKeyAlias=androiddebugkey \
+                        /p:AndroidSigningKeyPass=android \
+                        /p:AndroidSigningStorePass=android \
+                        --no-restore || exit 1
+                    find bin/Release/net{dotnet_version}.0-android -name "*.apk" -exec cp {{}} /output/r8/ \; 2>/dev/null || true
+                done
 
-                # ---- verify and copy APKs ----
-                APK_DIR="bin/Release/net{dotnet_version}.0-android"
-                if ! ls "$APK_DIR"/*.apk 1>/dev/null 2>&1; then
-                    echo "ERROR: No APKs found in $APK_DIR"
+                # ---- verify output ----
+                if ! ls /output/r8/*.apk 1>/dev/null 2>&1; then
+                    echo "ERROR: No APKs copied to /output/r8"
                     exit 1
                 fi
-                cp "$APK_DIR"/*.apk /output/r8/
 
                 # ---- copy metadata ----
                 cp {csproj} /output/r8/ || true
