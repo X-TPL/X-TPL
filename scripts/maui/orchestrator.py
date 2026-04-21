@@ -206,6 +206,7 @@ def build_app(app):
                 dotnet build {csproj} \
                     -f net{dotnet_version}.0-android \
                     -c Release \
+                    /p:AndroidPackageFormat=apk \
                     /p:AndroidCreatePackagePerAbi=true \
                     "/p:AndroidSupportedAbis=armeabi-v7a%3Barm64-v8a%3Bx86%3Bx86_64" \
                     /p:AndroidUseSharedRuntime=false \
