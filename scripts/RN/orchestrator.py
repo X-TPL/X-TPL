@@ -86,6 +86,7 @@ def build_app(app):
                 "-v", f"{app_path}:/source:ro",
                 "-v", f"{out_dir}:/output",
                 "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
+                "-v", f"{pathlib.Path.home()}/.gradle:/root/.gradle",
                 image_tag(node_version, jdk_version),
                 "bash", "-c",
                 f"""
@@ -157,6 +158,7 @@ def build_app(app):
                 "-v", f"{app_path}:/source:ro",
                 "-v", f"{out_dir}:/output",
                 "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
+                "-v", f"{pathlib.Path.home()}/.gradle:/root/.gradle",
                 image_tag(node_version, jdk_version),
                 "bash", "-c",
                 f"""
