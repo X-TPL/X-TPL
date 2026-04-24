@@ -1,46 +1,33 @@
 # Errors
-C/C++: CMake Error in /app/node_modules/react-native-screens/android/src/main/jni/CMakeLists.txt:
-C/C++:   Imported target "ReactAndroid::reactnative" includes non-existent path
-C/C++:     "/opt/gradle/caches/8.14.3/transforms/e7c5cf7bb7113a9cd8af3df63ab4ec8f/transformed/react-android-0.81.4-debu>
-C/C++:   in its INTERFACE_INCLUDE_DIRECTORIES.  Possible reasons include:
-C/C++:   * The path was deleted, renamed, or moved to another location.
-C/C++:   * An install or uninstall procedure did not complete successfully.
-C/C++:   * The installation package was faulty and references files it does not
-C/C++:   provide.
-C/C++: CMake Error in /app/node_modules/react-native-worklets/android/build/generated/source/codegen/jni/CMakeLists.txt:
-C/C++:   Imported target "fbjni::fbjni" includes non-existent path
-C/C++:     "/opt/gradle/caches/8.14.3/transforms/57eed124da95de5e0d0e6329b95f862e/transformed/fbjni-0.7.0/prefab/module>
-C/C++:   in its INTERFACE_INCLUDE_DIRECTORIES.  Possible reasons include:
-C/C++:   * The path was deleted, renamed, or moved to another location.
-C/C++:   * An install or uninstall procedure did not complete successfully.
-C/C++:   * The installation package was faulty and references files it does not
-C/C++:   provide.
-C/C++: CMake Generate step failed.  Build files cannot be regenerated correctly.
-C/C++: ninja: error: rebuilding 'build.ninja': subcommand failed
+Error: Unable to resolve module missing-asset-registry-path from /app/node_modules/expo-router/assets/unmatched.png: mi>
+  node_modules/expo-router/node_modules
+  node_modules
+^[[0m^[[31m^[[1m>^[[22m^[[39m^[[90m 1 |^[[39m ???PNG
+ ^[[90m 2 |^[[39m ^[[37m^[[41m^[[1m^Z^[[22m^[[49m^[[39m
+ ^[[90m 3 |^[[39m ^[[37m^[[41m^[[1m^@^[[22m^[[49m^[[39m^[[37m^[[41m^[[1m^@^[[22m^[[49m^[[39m^[[37m^[[41m^[[1m^@^[[22m^[>
+ ^[[90m 4 |^[[39m ^[[33mIHDR^[[39m^[[37m^[[41m^[[1m^@^[[22m^[[49m^[[39m^[[37m^[[41m^[[1m^@^[[22m^[[49m^[[39m^[[37m^[[41>
 
-Error: [android.dangerous]: withAndroidDangerousBaseMod: Cannot copy google-services.json from /app/google-services.json to /app/android/app/google-services.json. Ensure the source and destination paths exist.
-Error: [android.dangerous]: withAndroidDangerousBaseMod: Cannot copy google-services.json from /app/google-services.json to /app/android/app/google-services.json. Ensure the source and destination paths exist.
-at setGoogleServicesFile (/app/node_modules/@expo/config-plugins/build/android/GoogleServices.js:100:11)
-at async /app/node_modules/@expo/config-plugins/build/android/GoogleServices.js:81:5
-at async action (/app/node_modules/@expo/config-plugins/build/plugins/withMod.js:199:23)
-at async interceptingMod (/app/node_modules/@expo/config-plugins/build/plugins/withMod.js:104:21)
-at async interceptingMod (/app/node_modules/@expo/config-plugins/build/plugins/withMod.js:104:21)
-at async interceptingMod (/app/node_modules/@expo/config-plugins/build/plugins/withMod.js:104:21)
-at async action (/app/node_modules/@expo/config-plugins/build/plugins/createBaseMod.js:60:21)
-at async interceptingMod (/app/node_modules/@expo/config-plugins/build/plugins/withMod.js:104:21)
-at async evalModsAsync (/app/node_modules/@expo/config-plugins/build/plugins/mod-compiler.js:206:25)
-at async compileModsAsync (/app/node_modules/@expo/config-plugins/build/plugins/mod-compiler.js:123:10)
+Import stack:
+
+ node_modules/expo-router/assets/unmatched.png
+ | import "missing-asset-registry-path"
+
+Android Bundling failed 14984ms node_modules/expo-router/entry.js (952 modules)
+
+> Task :app:createBundleReleaseJsAndAssets FAILED
+
+
+SyntaxError: index.js: Couldn't determine the source directory. Does your config specify a 'source' field?
+Error: Couldn't determine the source directory. Does your config specify a 'source' field?
+    at getConfig (/app/node_modules/react-native-builder-bob/babel-config.js:29:11)
+    at module.exports (/app/babel.config.js:10:10)
+    at parseSync (/app/node_modules/@babel/core/lib/parse.js:38:72)
+    at Object.transform (/app/node_modules/metro-babel-transformer/src/index.js:40:29)
+    at transformJSWithBabel (/app/node_modules/metro-transform-worker/src/index.js:354:45)
 
 
 
-FAILURE: Build failed with an exception.
-
-* Where:
-Settings file '/app/android/settings.gradle' line: 3
-
-* What went wrong:
-A problem occurred evaluating settings 'android'.
-> Process 'command 'npx'' finished with non-zero exit value 1
+Error: Serializer did not return expected format. The project copy of `expo/metro-config` may be out of date. Error: Unexpected token 'v', "var __BUND"... is not valid JSON
 
 # Values
 

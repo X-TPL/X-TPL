@@ -186,8 +186,11 @@ def build_app(app):
                     node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json','utf8')); if(fs.existsSync('index.js')){{p.main='index.js'; fs.writeFileSync('package.json',JSON.stringify(p,null,2));}}" 2>/dev/null || true; \
                 fi && \
 
-                # ---- patch broken metro config (ESM-only or null-returning) ----
+                # ---- patch broken metro config (ESM-only, null-returning, monorepo, or outdated expo/metro-config) ----
+                # expo/metro-config older than ~0.18 returns a JS string instead of JSON from its serializer,
+                # causing "Serializer did not return expected format / Unexpected token 'v'" at bundle time.
                 if grep -q 'react-native-monorepo-config' metro.config.js 2>/dev/null || \
+                   grep -q 'expo/metro-config' metro.config.js 2>/dev/null || \
                    ! node -e "const c=require('./metro.config.js'); if(!c||typeof c!=='object') process.exit(1);" 2>/dev/null; then \
                     if [ -d node_modules/@react-native/metro-config ]; then \
                         printf 'const {{getDefaultConfig, mergeConfig}} = require("@react-native/metro-config");\nmodule.exports = mergeConfig(getDefaultConfig(__dirname), {{}});\n' > metro.config.js; \
@@ -210,10 +213,35 @@ def build_app(app):
                 # ---- stub missing metro watchFolders paths ----
                 mkdir -p /src 2>/dev/null || true && \
 
+                # ---- fix babel configs that use react-native-builder-bob ----
+                # builder-bob is a library-dev tool; its getConfig() throws "Couldn't determine the source
+                # directory" when built outside the library's own workspace. Replace with a standard preset.
+                if grep -ql 'react-native-builder-bob' babel.config.js babel.config.json .babelrc .babelrc.js 2>/dev/null; then \
+                    if [ -d node_modules/babel-preset-expo ]; then \
+                        printf 'module.exports=function(api){{api.cache(true);return{{presets:["babel-preset-expo"]}};}};\n' > babel.config.js; \
+                    elif [ -d node_modules/@react-native/babel-preset ]; then \
+                        printf 'module.exports={{presets:["module:@react-native/babel-preset"]}};' > babel.config.js; \
+                    else \
+                        printf 'module.exports={{presets:["module:metro-react-native-babel-preset"]}};' > babel.config.js; \
+                    fi; \
+                fi && \
+
                 # ---- ensure TypeScript babel support (fixes 'interface' SyntaxError in metro bundling) ----
                 if [ -d node_modules/babel-preset-expo ]; then \
                     grep -ql "expo\|typescript" babel.config.js .babelrc .babelrc.js babel.config.json 2>/dev/null || \
                     printf 'module.exports=function(api){{api.cache(true);return{{presets:["babel-preset-expo"]}};}};\n' > babel.config.js; \
+                fi && \
+
+                # ---- stub missing-asset-registry-path (Metro virtual module not resolved in release) ----
+                # Metro normally aliases this to @react-native/assets-registry/registry at bundle time.
+                # When that alias is missing, any PNG asset in node_modules triggers "Unable to resolve module".
+                if [ ! -d node_modules/missing-asset-registry-path ]; then \
+                    mkdir -p node_modules/missing-asset-registry-path && \
+                    if [ -f node_modules/@react-native/assets-registry/registry.js ]; then \
+                        printf 'module.exports=require("@react-native/assets-registry/registry");' > node_modules/missing-asset-registry-path/index.js; \
+                    else \
+                        printf 'module.exports={{registerAsset:function(){{return 0;}},getAssetByID:function(){{return null;}}}};' > node_modules/missing-asset-registry-path/index.js; \
+                    fi; \
                 fi && \
 
                 export PATH="/app/node_modules/.bin:$PATH" && \
