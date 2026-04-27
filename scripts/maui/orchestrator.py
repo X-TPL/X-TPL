@@ -218,7 +218,7 @@ def build_app(app):
                         /p:AndroidSigningKeyPass=android \
                         /p:AndroidSigningStorePass=android \
                         --no-restore || exit 1
-                    find bin/Release/net{dotnet_version}.0-android -name "*.apk" -exec cp {{}} /output/r8/ \; 2>/dev/null || true
+                    find bin/Release/net{dotnet_version}.0-android -name "*.apk" | while read f; do cp "$f" "/output/r8/$(basename ${{f%.apk}})-$ABI_RID.apk"; done 2>/dev/null || true
                 done
 
                 # ---- verify output ----
