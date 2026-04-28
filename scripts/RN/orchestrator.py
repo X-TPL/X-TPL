@@ -186,17 +186,31 @@ def build_app(app):
                     node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json','utf8')); if(fs.existsSync('index.js')){{p.main='index.js'; fs.writeFileSync('package.json',JSON.stringify(p,null,2));}}" 2>/dev/null || true; \
                 fi && \
 
-                # ---- patch broken metro config (ESM-only, null-returning, monorepo, or outdated expo/metro-config) ----
-                # expo/metro-config older than ~0.18 returns a JS string instead of JSON from its serializer,
-                # causing "Serializer did not return expected format / Unexpected token 'v'" at bundle time.
+                # ---- patch broken metro config (ESM-only, null-returning, or monorepo-only) ----
+                # NOTE: do NOT replace configs that merely use expo/metro-config — those carry
+                # Expo-specific resolver paths (watchFolders, extraNodeModules) needed for
+                # packages like @react-native-masked-view/masked-view to resolve.
                 if grep -q 'react-native-monorepo-config' metro.config.js 2>/dev/null || \
-                   grep -q 'expo/metro-config' metro.config.js 2>/dev/null || \
                    ! node -e "const c=require('./metro.config.js'); if(!c||typeof c!=='object') process.exit(1);" 2>/dev/null; then \
                     if [ -d node_modules/@react-native/metro-config ]; then \
                         printf 'const {{getDefaultConfig, mergeConfig}} = require("@react-native/metro-config");\nmodule.exports = mergeConfig(getDefaultConfig(__dirname), {{}});\n' > metro.config.js; \
                     else \
                         printf 'const {{getDefaultConfig}} = require("metro-config");\nmodule.exports = getDefaultConfig(__dirname);\n' > metro.config.js; \
                     fi; \
+                fi && \
+
+                # ---- fix expo/metro-config: serializer + Flow transformIgnorePatterns ----
+                # Problem 1: old expo/metro-config sets a customSerializer that returns a JS string
+                #   ("var __BUND...") instead of JSON → "Serializer did not return expected format".
+                # Problem 2: Metro's default transformIgnorePatterns excludes node_modules/expo/,
+                #   so expo/src/Expo.ts is never Babel-transformed → raw Flow syntax → SyntaxError.
+                # Fix: wrap the existing config (preserving all resolver/watchFolder settings) and
+                #   (1) delete customSerializer, (2) inject transformIgnorePatterns if absent.
+                if [ -f metro.config.js ] && [ -d node_modules/expo ] && \
+                   ( grep -q 'expo/metro-config\\|@expo/metro-config' metro.config.js 2>/dev/null || \
+                     ! grep -q 'transformIgnorePatterns' metro.config.js 2>/dev/null ); then \
+                    cp metro.config.js metro.config.orig.js && \
+                    printf 'const c=require("./metro.config.orig.js");const r=Object.assign({{}},c);if(r.serializer){{r.serializer=Object.assign({{}},r.serializer);delete r.serializer.customSerializer;}}r.transformer=Object.assign({{}},r.transformer||{{}});if(!r.transformer.transformIgnorePatterns){{r.transformer.transformIgnorePatterns=["node_modules/(?!(react-native|@react-native|expo|@expo|@unimodules|react-clone-referenced-element|@react-navigation|native-base)/)"];}}module.exports=r;\\n' > metro.config.js; \
                 fi && \
 
                 # ---- stub missing google-services.json (Firebase/Expo prebuild) ----
@@ -242,6 +256,14 @@ def build_app(app):
                     else \
                         printf 'module.exports={{registerAsset:function(){{return 0;}},getAssetByID:function(){{return null;}}}};' > node_modules/missing-asset-registry-path/index.js; \
                     fi; \
+                fi && \
+
+                # ---- stub @react-native-masked-view/masked-view if missing ----
+                # Required by @react-navigation/elements but often not installed as a direct dependency.
+                if [ ! -d node_modules/@react-native-masked-view/masked-view ]; then \
+                    mkdir -p node_modules/@react-native-masked-view/masked-view && \
+                    printf '{{"name":"@react-native-masked-view/masked-view","version":"0.1.11","main":"index.js"}}' > node_modules/@react-native-masked-view/masked-view/package.json && \
+                    printf 'const React=require("react");const {{View}}=require("react-native");function MaskedView(p){{return React.createElement(View,p.style?{{style:p.style}}:{{}},p.children);}}module.exports=MaskedView;module.exports.default=MaskedView;' > node_modules/@react-native-masked-view/masked-view/index.js; \
                 fi && \
 
                 export PATH="/app/node_modules/.bin:$PATH" && \
