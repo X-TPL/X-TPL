@@ -199,20 +199,6 @@ def build_app(app):
                     fi; \
                 fi && \
 
-                # ---- fix expo/metro-config: serializer + Flow transformIgnorePatterns ----
-                # Problem 1: old expo/metro-config sets a customSerializer that returns a JS string
-                #   ("var __BUND...") instead of JSON → "Serializer did not return expected format".
-                # Problem 2: Metro's default transformIgnorePatterns excludes node_modules/expo/,
-                #   so expo/src/Expo.ts is never Babel-transformed → raw Flow syntax → SyntaxError.
-                # Fix: wrap the existing config (preserving all resolver/watchFolder settings) and
-                #   (1) delete customSerializer, (2) inject transformIgnorePatterns if absent.
-                if [ -f metro.config.js ] && [ -d node_modules/expo ] && \
-                   ( grep -q 'expo/metro-config\\|@expo/metro-config' metro.config.js 2>/dev/null || \
-                     ! grep -q 'transformIgnorePatterns' metro.config.js 2>/dev/null ); then \
-                    cp metro.config.js metro.config.orig.js && \
-                    printf 'const c=require("./metro.config.orig.js");const r=Object.assign({{}},c);if(r.serializer){{r.serializer=Object.assign({{}},r.serializer);delete r.serializer.customSerializer;}}r.transformer=Object.assign({{}},r.transformer||{{}});if(!r.transformer.transformIgnorePatterns){{r.transformer.transformIgnorePatterns=["node_modules/(?!(react-native|@react-native|expo|@expo|@unimodules|react-clone-referenced-element|@react-navigation|native-base)/)"];}}module.exports=r;\\n' > metro.config.js; \
-                fi && \
-
                 # ---- stub missing google-services.json (Firebase/Expo prebuild) ----
                 if [ ! -f google-services.json ]; then \
                     python3 -c "import json; open('google-services.json','w').write(json.dumps({{'project_info':{{'project_number':'000000000000','project_id':'stub','storage_bucket':'stub.appspot.com'}},'client':[{{'client_info':{{'mobilesdk_app_id':'1:000000000000:android:0000000000000000','android_client_info':{{'package_name':'com.stub'}}}},'oauth_client':[],'api_key':[{{'current_key':'stub'}}],'services':{{'appinvite_service':{{'other_platform_oauth_client':[]}}}}}}],'configuration_version':'1'}}))" 2>/dev/null || true; \
@@ -222,6 +208,20 @@ def build_app(app):
                 if grep -q '"expo"' package.json && [ ! -d android ]; then
                     echo "Expo project detected";
                     CI=1 npx expo prebuild --platform android
+                fi && \
+
+                # ---- fix expo/metro-config: serializer + Flow transformIgnorePatterns ----
+                # Runs AFTER prebuild because prebuild generates metro.config.js for managed-workflow
+                # projects — patching before prebuild would be overwritten by the generated file.
+                # Fix 1: remove customSerializer that returns JS string instead of JSON
+                #   ("var __BUND..." → "Serializer did not return expected format").
+                # Fix 2: add transformIgnorePatterns so expo/src/Expo.ts goes through Babel
+                #   (default pattern excludes all node_modules → raw Flow types → SyntaxError).
+                if [ -f metro.config.js ] && [ -d node_modules/expo ] && \
+                   ( grep -q 'expo/metro-config\\|@expo/metro-config' metro.config.js 2>/dev/null || \
+                     ! grep -q 'transformIgnorePatterns' metro.config.js 2>/dev/null ); then \
+                    cp metro.config.js metro.config.orig.js && \
+                    printf 'const c=require("./metro.config.orig.js");const r=Object.assign({{}},c);if(r.serializer){{r.serializer=Object.assign({{}},r.serializer);delete r.serializer.customSerializer;}}r.transformer=Object.assign({{}},r.transformer||{{}});if(!r.transformer.transformIgnorePatterns){{r.transformer.transformIgnorePatterns=["node_modules/(?!(react-native|@react-native|expo|@expo|@unimodules|react-clone-referenced-element|@react-navigation|native-base)/)"];}}module.exports=r;\\n' > metro.config.js; \
                 fi && \
 
                 # ---- stub missing metro watchFolders paths ----
