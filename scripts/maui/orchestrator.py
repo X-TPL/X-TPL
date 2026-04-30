@@ -196,13 +196,21 @@ def build_app(app):
                 sed -i 's|<TargetFrameworks>[^<]*</TargetFrameworks>|<TargetFrameworks>net{dotnet_version}.0-android</TargetFrameworks>|' {csproj} 2>/dev/null || true
                 sed -i 's|<TargetFramework>[^<]*</TargetFramework>|<TargetFramework>net{dotnet_version}.0-android</TargetFramework>|' {csproj} 2>/dev/null || true
 
-                # ---- restore packages (auto-clean corrupted cache entries on failure) ----
-                if ! dotnet restore {csproj} 2>/tmp/nuget_restore.log; then
+                # ---- restore packages for all four RIDs in one pass ----
+                # /p:RuntimeIdentifiers ensures project.assets.json has a target entry for every
+                # RID we intend to build with (-r android-arm etc.), preventing NETSDK1047.
+                if ! dotnet restore {csproj} \
+                        /p:RuntimeIdentifiers="android-arm;android-arm64;android-x86;android-x64" \
+                        2>/tmp/nuget_restore.log; then
                     grep -oE "/root/\.nuget/packages/[^/]+/[^/']+" /tmp/nuget_restore.log | sort -u | xargs -r rm -rf 2>/dev/null || true
-                    dotnet restore {csproj} || exit 1
+                    dotnet restore {csproj} \
+                        /p:RuntimeIdentifiers="android-arm;android-arm64;android-x86;android-x64" \
+                        || exit 1
                 fi
 
                 # ---- build release APKs per-ABI via RuntimeIdentifier ----
+                # Use || true per iteration: projects that only support a subset of ABIs will
+                # skip unsupported ones without aborting the whole build.
                 for ABI_RID in android-arm android-arm64 android-x86 android-x64; do
                     dotnet build {csproj} \
                         -f net{dotnet_version}.0-android \
@@ -217,7 +225,7 @@ def build_app(app):
                         /p:AndroidSigningKeyAlias=androiddebugkey \
                         /p:AndroidSigningKeyPass=android \
                         /p:AndroidSigningStorePass=android \
-                        --no-restore || exit 1
+                        --no-restore || true
                     find bin/Release/net{dotnet_version}.0-android -name "*.apk" | while read f; do cp "$f" "/output/r8/$(basename ${{f%.apk}})-$ABI_RID.apk"; done 2>/dev/null || true
                 done
 
