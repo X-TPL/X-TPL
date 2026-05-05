@@ -200,11 +200,11 @@ def build_app(app):
                 # /p:RuntimeIdentifiers ensures project.assets.json has a target entry for every
                 # RID we intend to build with (-r android-arm etc.), preventing NETSDK1047.
                 if ! dotnet restore {csproj} \
-                        /p:RuntimeIdentifiers="android-arm;android-arm64;android-x86;android-x64" \
+                        "/p:RuntimeIdentifiers=android-arm%3Bandroid-arm64%3Bandroid-x86%3Bandroid-x64" \
                         2>/tmp/nuget_restore.log; then
                     grep -oE "/root/\.nuget/packages/[^/]+/[^/']+" /tmp/nuget_restore.log | sort -u | xargs -r rm -rf 2>/dev/null || true
                     dotnet restore {csproj} \
-                        /p:RuntimeIdentifiers="android-arm;android-arm64;android-x86;android-x64" \
+                        "/p:RuntimeIdentifiers=android-arm%3Bandroid-arm64%3Bandroid-x86%3Bandroid-x64" \
                         || exit 1
                 fi
 
