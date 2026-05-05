@@ -193,8 +193,8 @@ def build_app(app):
                 sed -i '/^android[[:space:]]*{/a\    splits {\n        abi {\n            reset()\n            enable true\n            universalApk false\n            include "armeabi-v7a", "arm64-v8a", "x86", "x86_64"\n        }\n    }' platforms/android/app/build.gradle || true
             fi
 
-            # ---- compile (skips prepare so patches above are not wiped) ----
-            npx cordova compile android --debug --no-interactive --verbose
+            # ---- build debug APK ----
+            npx cordova build android --debug --no-interactive --verbose
 
             cp platforms/android/app/build/outputs/apk/debug/*.apk /output/
 
@@ -297,8 +297,8 @@ def build_app(app):
             # ---- sign release with debug key ----
             sed -i '/buildTypes/,/}/s/release {/release {\n            signingConfig signingConfigs.debug/' platforms/android/app/build.gradle || true
 
-            # ---- compile release (skips prepare so patches above are not wiped) ----
-            npx cordova compile android --release --no-interactive --verbose
+            # ---- build release APK ----
+            npx cordova build android --release --no-interactive --verbose
 
             cp platforms/android/app/build/outputs/apk/release/*.apk /output/r8/
 
