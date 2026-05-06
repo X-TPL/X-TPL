@@ -196,22 +196,16 @@ def build_app(app):
                 sed -i 's|<TargetFrameworks>[^<]*</TargetFrameworks>|<TargetFrameworks>net{dotnet_version}.0-android</TargetFrameworks>|' {csproj} 2>/dev/null || true
                 sed -i 's|<TargetFramework>[^<]*</TargetFramework>|<TargetFramework>net{dotnet_version}.0-android</TargetFramework>|' {csproj} 2>/dev/null || true
 
-                # ---- restore packages for all four RIDs in one pass ----
-                # /p:RuntimeIdentifiers ensures project.assets.json has a target entry for every
-                # RID we intend to build with (-r android-arm etc.), preventing NETSDK1047.
-                if ! dotnet restore {csproj} \
-                        "/p:RuntimeIdentifiers=android-arm%3Bandroid-arm64%3Bandroid-x86%3Bandroid-x64" \
-                        2>/tmp/nuget_restore.log; then
-                    grep -oE "/root/\.nuget/packages/[^/]+/[^/']+" /tmp/nuget_restore.log | sort -u | xargs -r rm -rf 2>/dev/null || true
-                    dotnet restore {csproj} \
-                        "/p:RuntimeIdentifiers=android-arm%3Bandroid-arm64%3Bandroid-x86%3Bandroid-x64" \
-                        || exit 1
-                fi
-
-                # ---- build release APKs per-ABI via RuntimeIdentifier ----
-                # Use || true per iteration: projects that only support a subset of ABIs will
-                # skip unsupported ones without aborting the whole build.
+                # ---- build release APKs per-ABI: restore + build inside the loop ----
+                # Restoring with -r $ABI_RID populates project.assets.json with a target for that
+                # specific RID, preventing NETSDK1047. A single restore without -r only creates a
+                # RID-agnostic target, and passing /p:RuntimeIdentifiers="a;b;c" causes NETSDK1083
+                # on some SDK versions because the whole string is treated as one unknown RID.
                 for ABI_RID in android-arm android-arm64 android-x86 android-x64; do
+                    if ! dotnet restore {csproj} -r $ABI_RID 2>/tmp/nuget_restore.log; then
+                        grep -oE "/root/\.nuget/packages/[^/]+/[^/']+" /tmp/nuget_restore.log | sort -u | xargs -r rm -rf 2>/dev/null || true
+                        dotnet restore {csproj} -r $ABI_RID || true
+                    fi
                     dotnet build {csproj} \
                         -f net{dotnet_version}.0-android \
                         -c Release \
