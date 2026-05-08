@@ -131,8 +131,8 @@ def build_app(app):
             fi
 
             # ensure android platform
-            npx cordova platform add android
-            npx cordova prepare android
+            cordova platform add android
+            cordova prepare android
 
             # ---- PATCH ROOT GRADLE FILES (CRITICAL FIX) ----
             for f in platforms/android/build.gradle platforms/android/CordovaLib/build.gradle; do
@@ -194,7 +194,7 @@ def build_app(app):
             fi
 
             # ---- build debug APK ----
-            npx cordova build android --debug --no-interactive --verbose
+            cordova build android --debug --no-interactive --verbose
 
             cp platforms/android/app/build/outputs/apk/debug/*.apk /output/
 
@@ -231,8 +231,8 @@ def build_app(app):
             fi
 
             # ensure android platform
-            npx cordova platform add android
-            npx cordova prepare android
+            cordova platform add android
+            cordova prepare android
 
             # ---- PATCH ROOT GRADLE FILES (CRITICAL FIX) ----
             for f in platforms/android/build.gradle platforms/android/CordovaLib/build.gradle; do
@@ -298,7 +298,7 @@ def build_app(app):
             sed -i '/buildTypes/,/}/s/release {/release {\n            signingConfig signingConfigs.debug/' platforms/android/app/build.gradle || true
 
             # ---- build release APK ----
-            npx cordova build android --release --no-interactive --verbose
+            cordova build android --release --no-interactive --verbose
 
             cp platforms/android/app/build/outputs/apk/release/*.apk /output/r8/
 
