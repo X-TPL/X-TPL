@@ -106,17 +106,21 @@ def ensure_image(unity_version: str):
 
 # ---------- build execution ----------
 
-def _license_volume() -> list[str]:
+def _license_args() -> list[str]:
     """
-    Mount the host Unity license file into the container if it exists.
-    Activate a Unity Personal license once via:
-        unity-editor -batchmode -quit -createManualActivationFile -logFile
-    then submit the .alf at https://license.unity3d.com and save the .ulf to
-    ~/.local/share/unity3d/Unity/Unity_lic.ulf on the host machine.
+    Pass the Unity license to the container via UNITY_LICENSE env var.
+    unityci/editor reads this variable directly; it avoids hardware-fingerprint
+    issues that arise when mounting a .ulf file activated on a different machine.
+
+    To obtain the .ulf:
+      1. Generate a .alf:  docker run ... /opt/unity/Editor/Unity -batchmode
+                           -nographics -quit -createManualActivationFile
+      2. Upload the .alf at https://activate.game.ci (supports Personal license)
+      3. Save the returned .ulf to ~/.local/share/unity3d/Unity/Unity_lic.ulf
     """
     lic = pathlib.Path.home() / ".local/share/unity3d/Unity/Unity_lic.ulf"
     if lic.exists():
-        return ["-v", f"{lic}:/root/.local/share/unity3d/Unity/Unity_lic.ulf:ro"]
+        return ["-e", f"UNITY_LICENSE={lic.read_text()}"]
     return []
 
 
@@ -137,7 +141,7 @@ def build_app(app):
     attempts = 0
     max_attempts = len(UNITY_VERSIONS)
 
-    license_vol = _license_volume()
+    license_vol = _license_args()
 
     while unity_version and attempts < max_attempts:
         attempts += 1
