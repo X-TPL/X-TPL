@@ -2,19 +2,36 @@ name: Get Unity License
 on: workflow_dispatch
 
 jobs:
-  activate:
+  # Step 1: run this job first, download the artifact, upload .alf to
+  # https://activate.game.ci, download the .ulf, add its content as
+  # the UNITY_LICENSE repository secret, then run the activate job below.
+  request-activation-file:
     runs-on: ubuntu-latest
     steps:
-      - uses: game-ci/unity-activate@v3
-        id: activate
+      - uses: game-ci/unity-request-activation-file@v2
+        id: request
+        with:
+          unityVersion: 2022.3.54f1
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unity-activation-file
+          path: ${{ steps.request.outputs.filePath }}
+
+  # Step 2: after UNITY_LICENSE secret is set, run this job to verify
+  # and export the final license file for use on the build server.
+  activate:
+    runs-on: ubuntu-latest
+    needs: []   # run independently via workflow_dispatch after secret is set
+    steps:
+      - uses: game-ci/unity-activate@v2
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
 
-      - name: Export license
-        run: echo "$UNITY_LICENSE" > unity_lic.ulf
-        env:
-          UNITY_LICENSE: ${{ steps.activate.outputs.UNITY_LICENSE }}
+      - name: Export license file
+        run: cp ~/.local/share/unity3d/Unity/Unity_lic.ulf unity_lic.ulf 2>/dev/null || find / -name "Unity_lic.ulf" -exec cp {} unity_lic.ulf \; 2>/dev/null || true
 
       - uses: actions/upload-artifact@v4
         with:
