@@ -1,0 +1,22 @@
+name: Get Unity License
+on: workflow_dispatch
+
+jobs:
+  activate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: game-ci/unity-activate@v3
+        id: activate
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+
+      - name: Export license
+        run: echo "$UNITY_LICENSE" > unity_lic.ulf
+        env:
+          UNITY_LICENSE: ${{ steps.activate.outputs.UNITY_LICENSE }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unity-license
+          path: unity_lic.ulf
