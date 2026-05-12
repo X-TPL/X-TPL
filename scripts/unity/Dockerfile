@@ -63,16 +63,16 @@ RUN $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
     "cmake;3.22.1" \
     "ndk;25.2.9519653"
 
-# ---------- Unity Hub ----------
-# The install.sh script follows too many redirects; set up the repo manually instead.
-RUN wget -qO - https://hub.unity3d.com/linux/keys/public \
-        | gpg --dearmor > /usr/share/keyrings/Unity_Technologies_ApS.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/Unity_Technologies_ApS.gpg] \
-https://hub.unity3d.com/linux/repos/apt stable main" \
-        > /etc/apt/sources.list.d/unityhub.list && \
-    apt-get update && \
-    apt-get install -y unityhub && \
-    rm -rf /var/lib/apt/lists/*
+# ---------- Unity Hub (AppImage — avoids broken APT repo) ----------
+# Extract the AppImage in-place; --appimage-extract does not need FUSE.
+RUN curl -L "https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage" \
+        -o /tmp/UnityHub.AppImage && \
+    chmod +x /tmp/UnityHub.AppImage && \
+    cd /tmp && ./UnityHub.AppImage --appimage-extract > /dev/null 2>&1 && \
+    mv /tmp/squashfs-root /opt/unityhub && \
+    rm /tmp/UnityHub.AppImage && \
+    printf '#!/bin/sh\nexec /opt/unityhub/AppRun "$@"\n' > /usr/local/bin/unity-hub && \
+    chmod +x /usr/local/bin/unity-hub
 
 # ---------- Unity Editor with Android Build Support ----------
 # Unity Hub 3.x headless syntax: unity-hub -- --headless <cmd>
