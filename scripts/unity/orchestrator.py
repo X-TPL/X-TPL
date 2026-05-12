@@ -89,11 +89,14 @@ def ensure_image(unity_version: str):
         if image_exists(tag):
             return
 
-        print(f"[image] building {tag}  (this may take 10–20 min; Unity is large)")
+        # UNITY_IMAGE_VERSION is the unityci/editor tag suffix (typically 3 for 2022.3+).
+        # Check https://hub.docker.com/r/unityci/editor/tags for the correct value
+        # for older or newer Unity versions; default 3 works for most LTS releases.
+        print(f"[image] building {tag}  (pulls unityci/editor base, may take a few minutes)")
         run([
             "docker", "build",
             "--build-arg", f"UNITY_VERSION={unity_version}",
-            "--build-arg", f"JDK_VERSION={jdk_version}",
+            "--build-arg", "UNITY_IMAGE_VERSION=3",
             "-t", tag,
             str(DOCKERFILE_DIR),
         ], GLOBAL_LOG, check=True)
@@ -149,12 +152,11 @@ def build_app(app):
 
             ensure_image(unity_version)
 
-            # Unity executable path inside the container (installed by Unity Hub as root)
-            unity_exe = f"/root/Unity/Hub/Editor/{unity_version}/Editor/Unity"
-            # Common Unity Hub install layout; fall back to a find if path differs
+            # unityci/editor installs Unity at /opt/unity/Editor/Unity.
+            # Fall back to a broad find in case a future image version changes the path.
             unity_launch = (
-                f'UNITY_EXE="{unity_exe}"; '
-                f'[ -x "$UNITY_EXE" ] || UNITY_EXE=$(find /root/Unity -name "Unity" -type f 2>/dev/null | head -1); '
+                'UNITY_EXE="/opt/unity/Editor/Unity"; '
+                '[ -x "$UNITY_EXE" ] || UNITY_EXE=$(find /opt/unity /opt/Unity -name "Unity" -type f 2>/dev/null | head -1); '
                 f'[ -n "$UNITY_EXE" ] || {{ echo "ERROR: Unity executable not found"; exit 1; }}'
             )
 
