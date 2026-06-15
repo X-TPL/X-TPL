@@ -24,19 +24,9 @@ repos_data = []
 typescript_repositories = g.search_repositories(query='topic:react-native language:TypeScript',
     sort='updated'
 )
-javascript_repositories = g.search_repositories(query='topic:react-native language:JavaScript',
+"""javascript_repositories = g.search_repositories(query='topic:react-native language:JavaScript',
     sort='updated'
-)
-"""
-merged = {}
-for repo in typescript_repositories:
-    merged[repo.full_name] = repo
-
-for repo in javascript_repositories:
-    merged[repo.full_name] = repo
-
-final_repos = list(merged.values())
-"""
+)"""
 print(f"{typescript_repositories.totalCount} Repositories found in total")
 for repo in typescript_repositories:
     print(f"[scan] {repo.full_name}")
