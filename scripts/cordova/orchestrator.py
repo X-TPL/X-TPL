@@ -2,8 +2,13 @@ import subprocess
 import yaml
 import pathlib
 import threading
+import time
 import os
+import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+sys.path.insert(0, str(pathlib.Path(__file__).parent.parent.parent))
+from scripts.common.helpers import record_build
 
 ROOT = pathlib.Path(__file__).parent.resolve()
 OUTPUT_DIR = ROOT / "output"
@@ -204,14 +209,24 @@ def build_app(app):
             [ -f package-lock.json ] && cp package-lock.json /output/ || true
             [ -f yarn.lock ] && cp yarn.lock /output/ || true
             """
-            run([
-                "docker", "run", "--rm",
-                "-v", f"{app_path}:/source:ro",
-                "-v", f"{out_dir}:/output",
-                "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
-                image_tag(node_version, jdk_version),
-                "bash", "-c", bash_script
-            ], log_file)
+            _csv = OUTPUT_DIR / "builds.csv"
+
+            _t = time.time()
+            _ok = True
+            try:
+                run([
+                    "docker", "run", "--rm",
+                    "-v", f"{app_path}:/source:ro",
+                    "-v", f"{out_dir}:/output",
+                    "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
+                    image_tag(node_version, jdk_version),
+                    "bash", "-c", bash_script
+                ], log_file)
+            except Exception:
+                _ok = False
+                raise
+            finally:
+                record_build(_csv, app_id, "debug", _ok, time.time() - _t)
 
             r8_script = r"""set -e
             cp -r /source/. /app
@@ -308,14 +323,22 @@ def build_app(app):
             [ -f package-lock.json ] && cp package-lock.json /output/r8/ || true
             [ -f yarn.lock ] && cp yarn.lock /output/r8/ || true
             """
-            run([
-                "docker", "run", "--rm",
-                "-v", f"{app_path}:/source:ro",
-                "-v", f"{out_dir}:/output",
-                "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
-                image_tag(node_version, jdk_version),
-                "bash", "-c", r8_script
-            ], log_file)
+            _t = time.time()
+            _ok = True
+            try:
+                run([
+                    "docker", "run", "--rm",
+                    "-v", f"{app_path}:/source:ro",
+                    "-v", f"{out_dir}:/output",
+                    "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
+                    image_tag(node_version, jdk_version),
+                    "bash", "-c", r8_script
+                ], log_file)
+            except Exception:
+                _ok = False
+                raise
+            finally:
+                record_build(_csv, app_id, "r8", _ok, time.time() - _t)
 
             run(
                 ["echo", f"Build succeeded with Node {node_version} and JDK {jdk_version}"],

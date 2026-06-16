@@ -1,9 +1,10 @@
 import pathlib
 import threading
+import time
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent.parent.parent))
-from scripts.common.helpers import run, load_manifest, image_exists, run_builds  # noqa: F401
+from scripts.common.helpers import run, load_manifest, image_exists, run_builds, record_build  # noqa: F401
 
 ROOT = pathlib.Path(__file__).parent.resolve()
 OUTPUT_DIR = ROOT / "output"
@@ -81,15 +82,20 @@ def build_app(app):
 
             ensure_image(node_version, jdk_version)
 
-            run([
-                "docker", "run", "--rm",
-                "-v", f"{app_path}:/source:ro",
-                "-v", f"{out_dir}:/output",
-                "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
-                "-v", f"{pathlib.Path.home()}/.gradle:/root/.gradle",
-                image_tag(node_version, jdk_version),
-                "bash", "-c",
-                f"""
+            _csv = OUTPUT_DIR / "builds.csv"
+
+            _t = time.time()
+            _ok = True
+            try:
+                run([
+                    "docker", "run", "--rm",
+                    "-v", f"{app_path}:/source:ro",
+                    "-v", f"{out_dir}:/output",
+                    "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
+                    "-v", f"{pathlib.Path.home()}/.gradle:/root/.gradle",
+                    image_tag(node_version, jdk_version),
+                    "bash", "-c",
+                    f"""
                 set -e
 
                 cp -r /source/. /app && \
@@ -150,18 +156,26 @@ def build_app(app):
                 [ -f ../package.json ] && cp ../package.json /output/ || true
                 [ -f ../package-lock.json ] && cp ../package-lock.json /output/ || true
                 [ -f ../yarn.lock ] && cp ../yarn.lock /output/ || true
-                """
-            ], log_file)
+                    """
+                ], log_file)
+            except Exception:
+                _ok = False
+                raise
+            finally:
+                record_build(_csv, app_id, "debug", _ok, time.time() - _t)
 
-            run([
-                "docker", "run", "--rm",
-                "-v", f"{app_path}:/source:ro",
-                "-v", f"{out_dir}:/output",
-                "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
-                "-v", f"{pathlib.Path.home()}/.gradle:/root/.gradle",
-                image_tag(node_version, jdk_version),
-                "bash", "-c",
-                f"""
+            _t = time.time()
+            _ok = True
+            try:
+                run([
+                    "docker", "run", "--rm",
+                    "-v", f"{app_path}:/source:ro",
+                    "-v", f"{out_dir}:/output",
+                    "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
+                    "-v", f"{pathlib.Path.home()}/.gradle:/root/.gradle",
+                    image_tag(node_version, jdk_version),
+                    "bash", "-c",
+                    f"""
                 set -e
 
                 cp -r /source/. /app && \
@@ -311,8 +325,13 @@ def build_app(app):
                 [ -f ../package.json ] && cp ../package.json /output/r8/ || true
                 [ -f ../package-lock.json ] && cp ../package-lock.json /output/r8/ || true
                 [ -f ../yarn.lock ] && cp ../yarn.lock /output/r8/ || true
-                """
-            ], log_file)
+                    """
+                ], log_file)
+            except Exception:
+                _ok = False
+                raise
+            finally:
+                record_build(_csv, app_id, "r8", _ok, time.time() - _t)
 
             run(
                 ["echo", f"Build succeeded with Node {node_version}"],

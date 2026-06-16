@@ -1,10 +1,11 @@
+import time
 import yaml
 import pathlib
 import threading
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent.parent.parent))
-from scripts.common.helpers import run, load_manifest, image_exists, run_builds
+from scripts.common.helpers import run, load_manifest, image_exists, run_builds, record_build
 
 ROOT = pathlib.Path(__file__).parent.resolve()
 OUTPUT_DIR = ROOT / "output"
@@ -180,14 +181,19 @@ def build_app(app):
 
             ensure_image(flutter_version)
 
-            run([
-                "docker", "run", "--rm",
-                "-v", f"{app_path}:/source:ro",
-                "-v", f"{out_dir}:/output",
-                "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
-                image_tag(flutter_version, jdk_version),
-                "bash", "-c",
-                f"""
+            _csv = OUTPUT_DIR / "builds.csv"
+
+            _t = time.time()
+            _ok = True
+            try:
+                run([
+                    "docker", "run", "--rm",
+                    "-v", f"{app_path}:/source:ro",
+                    "-v", f"{out_dir}:/output",
+                    "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
+                    image_tag(flutter_version, jdk_version),
+                    "bash", "-c",
+                    f"""
                 cp -r /source/. /app && \
                 cd /app && \
                 {assets} && \
@@ -201,16 +207,25 @@ def build_app(app):
                 cp build/app/outputs/flutter-apk/*.apk /output/ && \
                 cp .dart_tool/package_config.json /output/ && \
                 cp pubspec.lock /output/
-                """
-            ], log_file)
-            run([ # R8 obfuscation
-                "docker", "run", "--rm",
-                "-v", f"{app_path}:/source:ro",
-                "-v", f"{out_dir}:/output",
-                "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
-                image_tag(flutter_version, jdk_version),
-                "bash", "-c",
-                f"""
+                    """
+                ], log_file)
+            except Exception:
+                _ok = False
+                raise
+            finally:
+                record_build(_csv, app_id, "debug", _ok, time.time() - _t)
+
+            _t = time.time()
+            _ok = True
+            try:
+                run([ # R8 obfuscation
+                    "docker", "run", "--rm",
+                    "-v", f"{app_path}:/source:ro",
+                    "-v", f"{out_dir}:/output",
+                    "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
+                    image_tag(flutter_version, jdk_version),
+                    "bash", "-c",
+                    f"""
                 cp -r /source/. /app && \
                 cd /app && \
                 {assets} && \
@@ -225,16 +240,25 @@ def build_app(app):
                 cp build/app/outputs/flutter-apk/*.apk /output/r8/ && \
                 cp .dart_tool/package_config.json /output/r8/ && \
                 cp pubspec.lock /output/r8/
-                """
-            ], log_file)
-            run([ # Flutter obfuscation
-                "docker", "run", "--rm",
-                "-v", f"{app_path}:/source:ro",
-                "-v", f"{out_dir}:/output",
-                "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
-                image_tag(flutter_version, jdk_version),
-                "bash", "-c",
-                f"""
+                    """
+                ], log_file)
+            except Exception:
+                _ok = False
+                raise
+            finally:
+                record_build(_csv, app_id, "r8", _ok, time.time() - _t)
+
+            _t = time.time()
+            _ok = True
+            try:
+                run([ # Flutter obfuscation
+                    "docker", "run", "--rm",
+                    "-v", f"{app_path}:/source:ro",
+                    "-v", f"{out_dir}:/output",
+                    "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
+                    image_tag(flutter_version, jdk_version),
+                    "bash", "-c",
+                    f"""
                 cp -r /source/. /app && \
                 cd /app && \
                 {assets} && \
@@ -249,8 +273,13 @@ def build_app(app):
                 cp build/app/outputs/flutter-apk/*.apk /output/obfuscated/ && \
                 cp .dart_tool/package_config.json /output/obfuscated/ && \
                 cp pubspec.lock /output/obfuscated/
-                """
-            ], log_file)
+                    """
+                ], log_file)
+            except Exception:
+                _ok = False
+                raise
+            finally:
+                record_build(_csv, app_id, "obfuscated", _ok, time.time() - _t)
 
             run(
                 ["echo", f"Build succeeded with Flutter {flutter_version}"],

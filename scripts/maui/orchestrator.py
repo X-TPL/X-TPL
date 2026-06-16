@@ -2,8 +2,13 @@ import subprocess
 import yaml
 import pathlib
 import threading
+import time
 import os
+import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+sys.path.insert(0, str(pathlib.Path(__file__).parent.parent.parent))
+from scripts.common.helpers import record_build
 
 ROOT = pathlib.Path(__file__).parent.resolve()
 OUTPUT_DIR = ROOT / "output"
@@ -133,15 +138,20 @@ def build_app(app):
 
             ensure_image(dotnet_version)
 
+            _csv = OUTPUT_DIR / "builds.csv"
+
             # ---- debug build ----
-            run([
-                "docker", "run", "--rm",
-                "-v", f"{app_path}:/source:ro",
-                "-v", f"{out_dir}:/output",
-                "-v", f"{pathlib.Path.home()}/.nuget/packages:/root/.nuget/packages",
-                image_tag(dotnet_version, jdk_version),
-                "bash", "-c",
-                f"""
+            _t = time.time()
+            _ok = True
+            try:
+                run([
+                    "docker", "run", "--rm",
+                    "-v", f"{app_path}:/source:ro",
+                    "-v", f"{out_dir}:/output",
+                    "-v", f"{pathlib.Path.home()}/.nuget/packages:/root/.nuget/packages",
+                    image_tag(dotnet_version, jdk_version),
+                    "bash", "-c",
+                    f"""
                 set -e
                 cp -r /source/. /app
                 cd /app
@@ -176,18 +186,26 @@ def build_app(app):
                 # ---- copy metadata ----
                 cp {csproj} /output/ || true
                 [ -f packages.lock.json ] && cp packages.lock.json /output/ || true
-                """
-            ], log_file)
+                    """
+                ], log_file)
+            except Exception:
+                _ok = False
+                raise
+            finally:
+                record_build(_csv, app_id, "debug", _ok, time.time() - _t)
 
             # ---- R8 release build ----
-            run([
-                "docker", "run", "--rm",
-                "-v", f"{app_path}:/source:ro",
-                "-v", f"{out_dir}:/output",
-                "-v", f"{pathlib.Path.home()}/.nuget/packages:/root/.nuget/packages",
-                image_tag(dotnet_version, jdk_version),
-                "bash", "-c",
-                f"""
+            _t = time.time()
+            _ok = True
+            try:
+                run([
+                    "docker", "run", "--rm",
+                    "-v", f"{app_path}:/source:ro",
+                    "-v", f"{out_dir}:/output",
+                    "-v", f"{pathlib.Path.home()}/.nuget/packages:/root/.nuget/packages",
+                    image_tag(dotnet_version, jdk_version),
+                    "bash", "-c",
+                    f"""
                 set -e
                 cp -r /source/. /app
                 cd /app
@@ -232,8 +250,13 @@ def build_app(app):
                 # ---- copy metadata ----
                 cp {csproj} /output/r8/ || true
                 [ -f packages.lock.json ] && cp packages.lock.json /output/r8/ || true
-                """
-            ], log_file)
+                    """
+                ], log_file)
+            except Exception:
+                _ok = False
+                raise
+            finally:
+                record_build(_csv, app_id, "r8", _ok, time.time() - _t)
 
             run(
                 ["echo", f"Build succeeded with .NET {dotnet_version}"],
