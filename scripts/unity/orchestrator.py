@@ -210,6 +210,9 @@ def build_app(app):
                 # ---- copy TPL metadata ----
                 [ -f Packages/manifest.json ] && cp Packages/manifest.json /output/ || true
                 [ -f Packages/packages-lock.json ] && cp Packages/packages-lock.json /output/ || true
+                mkdir -p /output/libs
+                find Assets/Plugins/Android -name "*.jar" 2>/dev/null | while read f; do cp "$f" /output/libs/ 2>/dev/null; done || true
+                find Assets/Plugins/Android -name "*.aar" 2>/dev/null | while read f; do cp "$f" /output/libs/ 2>/dev/null; done || true
                     """
                 ], log_file)
             except Exception:
@@ -260,6 +263,9 @@ def build_app(app):
                 # ---- copy TPL metadata ----
                 [ -f Packages/manifest.json ] && cp Packages/manifest.json /output/r8/ || true
                 [ -f Packages/packages-lock.json ] && cp Packages/packages-lock.json /output/r8/ || true
+                mkdir -p /output/r8/libs
+                find Assets/Plugins/Android -name "*.jar" 2>/dev/null | while read f; do cp "$f" /output/r8/libs/ 2>/dev/null; done || true
+                find Assets/Plugins/Android -name "*.aar" 2>/dev/null | while read f; do cp "$f" /output/r8/libs/ 2>/dev/null; done || true
                     """
                 ], log_file)
             except Exception:

@@ -186,6 +186,9 @@ def build_app(app):
                 # ---- copy metadata ----
                 cp {csproj} /output/ || true
                 [ -f packages.lock.json ] && cp packages.lock.json /output/ || true
+                mkdir -p /output/libs
+                find . -name "*.jar" 2>/dev/null | grep -v "/bin/" | grep -v "/obj/" | grep -v "/.nuget/" | while read f; do cp "$f" /output/libs/ 2>/dev/null; done || true
+                find . -name "*.aar" 2>/dev/null | grep -v "/bin/" | grep -v "/obj/" | grep -v "/.nuget/" | while read f; do cp "$f" /output/libs/ 2>/dev/null; done || true
                     """
                 ], log_file)
             except Exception:
@@ -250,6 +253,9 @@ def build_app(app):
                 # ---- copy metadata ----
                 cp {csproj} /output/r8/ || true
                 [ -f packages.lock.json ] && cp packages.lock.json /output/r8/ || true
+                mkdir -p /output/r8/libs
+                find . -name "*.jar" 2>/dev/null | grep -v "/bin/" | grep -v "/obj/" | grep -v "/.nuget/" | while read f; do cp "$f" /output/r8/libs/ 2>/dev/null; done || true
+                find . -name "*.aar" 2>/dev/null | grep -v "/bin/" | grep -v "/obj/" | grep -v "/.nuget/" | while read f; do cp "$f" /output/r8/libs/ 2>/dev/null; done || true
                     """
                 ], log_file)
             except Exception:
