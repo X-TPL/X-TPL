@@ -17,6 +17,7 @@ GLOBAL_LOCK = threading.Lock()
 
 # Ordered list of known Flutter versions (ascending)
 FLUTTER_VERSIONS = [
+    "1.12.13",
     "1.17.0",
     "1.20.0",
     "1.22.0",
