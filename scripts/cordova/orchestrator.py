@@ -206,6 +206,7 @@ def build_app(app):
             # ---- copy TPL metadata ----
             [ -f plugins/fetch.json ] && cp plugins/fetch.json /output/ || true
             [ -f platforms/android/app/build.gradle ] && cp platforms/android/app/build.gradle /output/app-build.gradle || true
+            [ -f package.json ] && cp package.json /output/ || true
             [ -f package-lock.json ] && cp package-lock.json /output/ || true
             [ -f yarn.lock ] && cp yarn.lock /output/ || true
             mkdir -p /output/libs
@@ -323,6 +324,7 @@ def build_app(app):
             # ---- copy TPL metadata ----
             [ -f plugins/fetch.json ] && cp plugins/fetch.json /output/r8/ || true
             [ -f platforms/android/app/build.gradle ] && cp platforms/android/app/build.gradle /output/r8/app-build.gradle || true
+            [ -f package.json ] && cp package.json /output/r8/ || true
             [ -f package-lock.json ] && cp package-lock.json /output/r8/ || true
             [ -f yarn.lock ] && cp yarn.lock /output/r8/ || true
             mkdir -p /output/r8/libs
