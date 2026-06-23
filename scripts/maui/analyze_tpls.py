@@ -2,9 +2,9 @@
 """
 Analyze MAUI build artifacts to produce a TPL version report.
 
-For every packages.lock.json found under output/<app>/ (root level only, r8/
-subdir is skipped since it is the same app), collects all NuGet packages and
-their resolved versions, then writes tpl_analysis.txt:
+For every .csproj found under output/<app>/ (root level only, r8/ subdir is
+skipped since it is the same app), collects all <PackageReference> entries and
+their versions, then writes tpl_analysis.txt:
 
     PackageName: 1.0.0                    (single version seen)
     PackageName: {1.0.0, 2.0.0, 3.1.0}   (multiple versions seen)
@@ -12,65 +12,63 @@ their resolved versions, then writes tpl_analysis.txt:
 Sorted alphabetically. Summary header shows total unique packages and pairs.
 """
 
-import json
 import pathlib
+import xml.etree.ElementTree as ET
 from collections import defaultdict
 
 ROOT = pathlib.Path(__file__).parent.resolve()
 OUTPUT_DIR = ROOT / "output"
 REPORT_FILE = ROOT / "tpl_analysis.txt"
 
-# Package types that are not third-party (skip them)
-_SKIP_TYPES = {"Project"}
 
-
-def collect_lock_files() -> list[pathlib.Path]:
-    """Return root-level packages.lock.json files, one per app directory."""
-    locks = []
+def collect_csproj_files() -> list[pathlib.Path]:
+    """Return root-level .csproj files, one per app directory."""
+    csprojfiles = []
     if not OUTPUT_DIR.is_dir():
-        return locks
+        return csprojfiles
     for app_dir in sorted(OUTPUT_DIR.iterdir()):
         if not app_dir.is_dir():
             continue
-        lock = app_dir / "packages.lock.json"
-        if lock.exists():
-            locks.append(lock)
-    return locks
+        found = list(app_dir.glob("*.csproj"))
+        if found:
+            csprojfiles.append(found[0])
+    return csprojfiles
 
 
-def parse_lock(path: pathlib.Path) -> dict[str, str]:
-    """Return {package: version} for all non-project NuGet packages."""
+def parse_csproj(path: pathlib.Path) -> dict[str, str]:
+    """Return {package: version} for all <PackageReference> entries."""
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
+        tree = ET.parse(path)
     except Exception:
         return {}
 
     result = {}
-    for target_pkgs in (data or {}).get("dependencies", {}).values():
-        if not isinstance(target_pkgs, dict):
+    for ref in tree.iter("PackageReference"):
+        name = ref.get("Include") or ref.get("Update")
+        if not name:
             continue
-        for name, info in target_pkgs.items():
-            if not isinstance(info, dict):
-                continue
-            if info.get("type") in _SKIP_TYPES:
-                continue
-            version = str(info.get("resolved", "")).strip()
-            if version:
-                result[name] = version
+        version = ref.get("Version") or ref.get("version")
+        if version is None:
+            version_el = ref.find("Version")
+            if version_el is not None:
+                version = version_el.text
+        version = (version or "").strip()
+        if version:
+            result[name] = version
     return result
 
 
 def main() -> None:
-    lock_files = collect_lock_files()
-    if not lock_files:
-        print(f"No packages.lock.json files found under {OUTPUT_DIR}")
+    csproj_files = collect_csproj_files()
+    if not csproj_files:
+        print(f"No .csproj files found under {OUTPUT_DIR}")
         return
 
     tpl_versions: dict[str, set[str]] = defaultdict(set)
     parsed = 0
 
-    for lock in lock_files:
-        pkgs = parse_lock(lock)
+    for csproj in csproj_files:
+        pkgs = parse_csproj(csproj)
         if pkgs:
             parsed += 1
             for name, version in pkgs.items():
@@ -81,9 +79,9 @@ def main() -> None:
 
     lines = [
         "# MAUI TPL Analysis",
-        f"# Lock files analyzed : {parsed} / {len(lock_files)}",
-        f"# Unique packages     : {total_packages}",
-        f"# Unique TPL:version  : {total_pairs}",
+        f"# .csproj files analyzed : {parsed} / {len(csproj_files)}",
+        f"# Unique packages        : {total_packages}",
+        f"# Unique TPL:version     : {total_pairs}",
         "",
     ]
 
