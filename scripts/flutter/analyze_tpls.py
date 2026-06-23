@@ -2,14 +2,25 @@
 """
 Analyze Flutter build artifacts to produce a TPL version report.
 
+pubspec.lock already encodes the direct/transitive distinction via the
+`dependency` field on each entry:
+  "direct main"  -> listed in dependencies:
+  "direct dev"   -> listed in dev_dependencies:
+  "transitive"   -> pulled in by another package
+
 For every pubspec.lock found under output/<app>/ (root level only, r8/ and
-obfuscated/ subdirs are skipped since they are the same app), collects all
-hosted/git packages and their resolved versions, then writes tpl_analysis.txt:
+obfuscated/ subdirs are skipped), writes tpl_analysis.txt with three sections:
 
-    package_name: 1.0.0                    (single version seen)
-    package_name: {1.0.0, 2.0.0, 3.1.0}   (multiple versions seen)
+    [direct]
+    package_name: 1.0.0
 
-Sorted alphabetically. Summary header shows total unique packages and pairs.
+    [transitive]
+    package_name: 1.0.0
+
+    [all]
+    package_name: {1.0.0, 2.0.0}
+
+Each section is sorted alphabetically. Summary header shows counts per section.
 """
 
 import pathlib
@@ -21,15 +32,13 @@ ROOT = pathlib.Path(__file__).parent.resolve()
 OUTPUT_DIR = ROOT / "output"
 REPORT_FILE = ROOT / "tpl_analysis.txt"
 
-# Sources that are not third-party packages (skip them)
 _SKIP_SOURCES = {"sdk"}
 
 
 def collect_lock_files() -> list[pathlib.Path]:
-    """Return root-level pubspec.lock files, one per app directory."""
-    locks = []
     if not OUTPUT_DIR.is_dir():
-        return locks
+        return []
+    locks = []
     for app_dir in sorted(OUTPUT_DIR.iterdir()):
         if not app_dir.is_dir():
             continue
@@ -39,25 +48,33 @@ def collect_lock_files() -> list[pathlib.Path]:
     return locks
 
 
-def parse_lock(path: pathlib.Path) -> dict[str, str]:
-    """Return {package: version} for all non-SDK packages in a pubspec.lock."""
+def parse_lock(path: pathlib.Path) -> tuple[dict[str, str], dict[str, str]]:
+    """Return (direct, transitive) dicts of {package: version}."""
     try:
         with path.open(encoding="utf-8") as f:
             data = yaml.safe_load(f)
     except Exception:
-        return {}
+        return {}, {}
 
     packages = (data or {}).get("packages") or {}
-    result = {}
+    direct: dict[str, str] = {}
+    transitive: dict[str, str] = {}
+
     for name, info in packages.items():
         if not isinstance(info, dict):
             continue
         if info.get("source") in _SKIP_SOURCES:
             continue
         version = str(info.get("version", "")).strip('"').strip()
-        if version:
-            result[name] = version
-    return result
+        if not version:
+            continue
+        dep_kind = info.get("dependency", "")
+        if dep_kind.startswith("direct"):
+            direct[name] = version
+        else:
+            transitive[name] = version
+
+    return direct, transitive
 
 
 def main() -> None:
@@ -66,37 +83,64 @@ def main() -> None:
         print(f"No pubspec.lock files found under {OUTPUT_DIR}")
         return
 
-    tpl_versions: dict[str, set[str]] = defaultdict(set)
+    direct_versions: dict[str, set[str]] = defaultdict(set)
+    transitive_versions: dict[str, set[str]] = defaultdict(set)
+    all_versions: dict[str, set[str]] = defaultdict(set)
     parsed = 0
 
     for lock in lock_files:
-        pkgs = parse_lock(lock)
-        if pkgs:
+        direct, transitive = parse_lock(lock)
+        if direct or transitive:
             parsed += 1
-            for name, version in pkgs.items():
-                tpl_versions[name].add(version)
+        for name, version in direct.items():
+            direct_versions[name].add(version)
+            all_versions[name].add(version)
+        for name, version in transitive.items():
+            transitive_versions[name].add(version)
+            all_versions[name].add(version)
 
-    total_packages = len(tpl_versions)
-    total_pairs = sum(len(v) for v in tpl_versions.values())
+    def section_lines(title: str, data: dict[str, set[str]]) -> list[str]:
+        lines = [f"[{title}]"]
+        for name in sorted(data):
+            versions = sorted(data[name])
+            if len(versions) == 1:
+                lines.append(f"{name}: {versions[0]}")
+            else:
+                lines.append(f"{name}: {{{', '.join(versions)}}}")
+        return lines
 
-    lines = [
+    d_pkgs = len(direct_versions)
+    d_pairs = sum(len(v) for v in direct_versions.values())
+    t_pkgs = len(transitive_versions)
+    t_pairs = sum(len(v) for v in transitive_versions.values())
+    a_pkgs = len(all_versions)
+    a_pairs = sum(len(v) for v in all_versions.values())
+
+    header = [
         "# Flutter TPL Analysis",
         f"# Lock files analyzed : {parsed} / {len(lock_files)}",
-        f"# Unique packages     : {total_packages}",
-        f"# Unique TPL:version  : {total_pairs}",
+        f"# Direct   packages   : {d_pkgs}  ({d_pairs} TPL:version pairs)",
+        f"# Transitive packages : {t_pkgs}  ({t_pairs} TPL:version pairs)",
+        f"# All packages        : {a_pkgs}  ({a_pairs} TPL:version pairs)",
         "",
     ]
 
-    for name in sorted(tpl_versions):
-        versions = sorted(tpl_versions[name])
-        if len(versions) == 1:
-            lines.append(f"{name}: {versions[0]}")
-        else:
-            lines.append(f"{name}: {{{', '.join(versions)}}}")
+    lines = (
+        header
+        + section_lines("direct", direct_versions)
+        + [""]
+        + section_lines("transitive", transitive_versions)
+        + [""]
+        + section_lines("all", all_versions)
+        + [""]
+    )
 
-    report = "\n".join(lines) + "\n"
+    report = "\n".join(lines)
     REPORT_FILE.write_text(report, encoding="utf-8")
-    print(f"Written to {REPORT_FILE}  ({total_packages} packages, {total_pairs} TPL:version pairs)")
+    print(
+        f"Written to {REPORT_FILE}  "
+        f"(direct: {d_pkgs}, transitive: {t_pkgs}, all: {a_pkgs})"
+    )
 
 
 if __name__ == "__main__":
