@@ -161,9 +161,9 @@ def build_app(app):
                 sed -i 's|<TargetFramework>[^<]*</TargetFramework>|<TargetFramework>net{dotnet_version}.0-android</TargetFramework>|' {csproj} 2>/dev/null || true
 
                 # ---- restore packages (auto-clean corrupted cache entries on failure) ----
-                if ! dotnet restore {csproj} 2>/tmp/nuget_restore.log; then
+                if ! dotnet restore {csproj} /p:RestorePackagesWithLockFile=true 2>/tmp/nuget_restore.log; then
                     grep -oE "/root/\.nuget/packages/[^/]+/[^/']+" /tmp/nuget_restore.log | sort -u | xargs -r rm -rf 2>/dev/null || true
-                    dotnet restore {csproj} || exit 1
+                    dotnet restore {csproj} /p:RestorePackagesWithLockFile=true || exit 1
                 fi
 
                 # ---- build debug APK with per-ABI splits ----
@@ -185,6 +185,7 @@ def build_app(app):
 
                 # ---- copy metadata ----
                 cp {csproj} /output/ || true
+                [ -f packages.lock.json ] && cp packages.lock.json /output/ || true
                 mkdir -p /output/libs
                 find . -name "*.jar" 2>/dev/null | grep -v "/bin/" | grep -v "/obj/" | grep -v "/.nuget/" | while read f; do cp "$f" /output/libs/ 2>/dev/null; done || true
                 find . -name "*.aar" 2>/dev/null | grep -v "/bin/" | grep -v "/obj/" | grep -v "/.nuget/" | while read f; do cp "$f" /output/libs/ 2>/dev/null; done || true
@@ -222,9 +223,9 @@ def build_app(app):
                 # RID-agnostic target, and passing /p:RuntimeIdentifiers="a;b;c" causes NETSDK1083
                 # on some SDK versions because the whole string is treated as one unknown RID.
                 for ABI_RID in android-arm android-arm64 android-x86 android-x64; do
-                    if ! dotnet restore {csproj} -r $ABI_RID 2>/tmp/nuget_restore.log; then
+                    if ! dotnet restore {csproj} /p:RestorePackagesWithLockFile=true -r $ABI_RID 2>/tmp/nuget_restore.log; then
                         grep -oE "/root/\.nuget/packages/[^/]+/[^/']+" /tmp/nuget_restore.log | sort -u | xargs -r rm -rf 2>/dev/null || true
-                        dotnet restore {csproj} -r $ABI_RID || true
+                        dotnet restore {csproj} /p:RestorePackagesWithLockFile=true -r $ABI_RID || true
                     fi
                     dotnet build {csproj} \
                         -f net{dotnet_version}.0-android \
