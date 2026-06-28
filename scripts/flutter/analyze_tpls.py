@@ -86,6 +86,7 @@ def main() -> None:
     direct_versions: dict[str, set[str]] = defaultdict(set)
     transitive_versions: dict[str, set[str]] = defaultdict(set)
     all_versions: dict[str, set[str]] = defaultdict(set)
+    app_usage: dict[str, int] = defaultdict(int)
     parsed = 0
 
     for lock in lock_files:
@@ -95,9 +96,11 @@ def main() -> None:
         for name, version in direct.items():
             direct_versions[name].add(version)
             all_versions[name].add(version)
+            app_usage[name] += 1
         for name, version in transitive.items():
             transitive_versions[name].add(version)
             all_versions[name].add(version)
+            app_usage[name] += 1
 
     def section_lines(title: str, data: dict[str, set[str]]) -> list[str]:
         lines = [f"[{title}]"]
@@ -125,8 +128,16 @@ def main() -> None:
         "",
     ]
 
+    top10 = sorted(app_usage.items(), key=lambda x: x[1], reverse=True)[:10]
+    top10_lines = ["[top 10 by repository count]"]
+    for rank, (name, count) in enumerate(top10, 1):
+        pct = count / parsed * 100 if parsed else 0
+        top10_lines.append(f"{rank:>2}. {name}  —  {count} repos ({pct:.1f}%)")
+
     lines = (
         header
+        + top10_lines
+        + [""]
         + section_lines("direct", direct_versions)
         + [""]
         + section_lines("transitive", transitive_versions)
