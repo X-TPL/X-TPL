@@ -100,7 +100,6 @@ def main() -> None:
         for name, version in transitive.items():
             transitive_versions[name].add(version)
             all_versions[name].add(version)
-            app_usage[name] += 1
 
     def section_lines(title: str, data: dict[str, set[str]]) -> list[str]:
         lines = [f"[{title}]"]
