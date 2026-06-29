@@ -168,6 +168,59 @@ def parse_package_json(path: pathlib.Path) -> set[str]:
     return names
 
 
+def generate_chart(usage: dict[str, int], total: int, title: str, output_path: pathlib.Path, n: int = 20) -> None:
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError:
+        print("matplotlib not installed — skipping chart (pip install matplotlib)")
+        return
+    if not usage or total == 0:
+        return
+
+    top = sorted(usage.items(), key=lambda x: x[1], reverse=True)[:n]
+    names = [name for name, _ in reversed(top)]
+    pcts = [count / total * 100 for _, count in reversed(top)]
+
+    fig, ax = plt.subplots(figsize=(10, max(4, len(top) * 0.45)))
+    bars = ax.barh(names, pcts, color="#4878CF", edgecolor="white", height=0.7)
+
+    for bar, pct in zip(bars, pcts):
+        ax.text(
+            bar.get_width() + 0.5,
+            bar.get_y() + bar.get_height() / 2,
+            f"{pct:.1f}%",
+            va="center", ha="left", fontsize=9,
+        )
+
+    ax.set_xlabel("Percentage of repositories (%)", fontsize=11)
+    ax.set_title(title, fontsize=13, pad=12)
+    ax.set_xlim(0, min(100, max(pcts) * 1.15))
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.tick_params(axis="y", labelsize=9)
+    ax.tick_params(axis="x", labelsize=9)
+
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    print(f"Chart saved to {output_path}")
+
+
+def histogram_lines(title: str, usage: dict[str, int], total: int, n: int = 20) -> list[str]:
+    top = sorted(usage.items(), key=lambda x: x[1], reverse=True)[:n]
+    if not top:
+        return [f"[{title}]", "(no data)"]
+    max_count = top[0][1]
+    max_name_len = max(len(name) for name, _ in top)
+    bar_width = 40
+    lines = [f"[{title}]"]
+    for name, count in top:
+        pct = count / total * 100 if total else 0
+        filled = round(bar_width * count / max_count)
+        lines.append(f"{name:<{max_name_len}}  {'█' * filled:<{bar_width}}  {pct:5.1f}%  ({count})")
+    return lines
+
+
 # ---------- main ----------
 
 def main() -> None:
@@ -179,6 +232,7 @@ def main() -> None:
     direct_versions: dict[str, set[str]] = defaultdict(set)
     transitive_versions: dict[str, set[str]] = defaultdict(set)
     all_versions: dict[str, set[str]] = defaultdict(set)
+    app_usage: dict[str, int] = defaultdict(int)
 
     npm_parsed = 0
     npm_v1 = 0
@@ -200,6 +254,7 @@ def main() -> None:
             for name, version in direct.items():
                 direct_versions[name].add(version)
                 all_versions[name].add(version)
+                app_usage[name] += 1
             for name, version in transitive.items():
                 transitive_versions[name].add(version)
                 all_versions[name].add(version)
@@ -217,6 +272,7 @@ def main() -> None:
                 if direct_names:
                     if name in direct_names:
                         direct_versions[name].add(version)
+                        app_usage[name] += 1
                     else:
                         transitive_versions[name].add(version)
 
@@ -263,8 +319,19 @@ def main() -> None:
         "",
     ]
 
+    total_parsed = npm_parsed + yarn_parsed
+    top10 = sorted(app_usage.items(), key=lambda x: x[1], reverse=True)[:10]
+    top10_lines = ["[top 10 by repository count]"]
+    for rank, (name, count) in enumerate(top10, 1):
+        pct = count / total_parsed * 100 if total_parsed else 0
+        top10_lines.append(f"{rank:>2}. {name}  —  {count} repos ({pct:.1f}%)")
+
     lines = (
         header
+        + top10_lines
+        + [""]
+        + histogram_lines("histogram - top 20 direct deps", app_usage, total_parsed)
+        + [""]
         + section_lines("direct", direct_versions)
         + [""]
         + section_lines("transitive", transitive_versions)
@@ -277,6 +344,11 @@ def main() -> None:
     print(
         f"Written to {REPORT_FILE}  "
         f"(direct: {d_pkgs}, transitive: {t_pkgs}, all: {a_pkgs})"
+    )
+    generate_chart(
+        app_usage, total_parsed,
+        "Top 20 Most Used React Native Libraries (Direct Dependencies)",
+        ROOT / "tpl_chart.pdf",
     )
 
 
