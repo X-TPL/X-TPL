@@ -27,3 +27,9 @@ Generated 865 build entries.
 3719 apks
 436 folders with an apk
 71 do not have obfuscated results
+
+# prod 
+Saved 1752 entries to repos.json
+Collected 1663 buildable repos
+downloaded: 1662 repos
+analyzed: Generated 1522 build entries.

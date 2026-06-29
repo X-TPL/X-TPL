@@ -1,7 +1,6 @@
-ERROR: R8: java.lang.IllegalArgumentException: Provided Metadata instance has version 2.1.0, while maximum supported ted version is 2.0.0. To support newer versions, update the kotlinx-metadata-jvm library.
 
-> A failure occurred while executing com.android.build.gradle.tasks.PackageAndroidArtifact$IncrementalSplitterRunnab>
-> SigningConfig "release" is missing required property "storeFile".
+
+
 
 ## failing Docker builds
 3.26 & 3.29 & 3.38
@@ -33,8 +32,7 @@ To count files with a certain word: grep -rl "SAXParseException" /path/to/folder
 only build.log: grep -rl "SAXParseException" /path/to/folder --include="build.log" | wc -l
 
 
-To delete dictionaries with a certain keyword: grep -rl "npm error" . | xargs -n1 dirname | sort -u |
- xargs rm -r
+To delete dictionaries with a certain keyword: grep -rl "npm error" . --include="build.log" | xargs -n1 dirname | sort -u | xargs rm -r
 
 To delete all dictionaries with an apk: find . -type f -name "*.apk" -exec dirname {} \; | sort -u | xargs rm -rf
 
@@ -42,6 +40,7 @@ To find folders with less than 3 apks in the main dir: for d in */; do count=$(f
 
 To find folders with less than 9 apks (recursively): for d in */; do count=$(find "$d" -name "*.apk" | wc -l); [ "$count" -gt 0 ] && [ "$count" -lt 9 ] && echo "$count $d"; done
 
+To find folders with release apks: for d in */; do   find "$d" -wholename "*/r8/*.apk" -print -quit | grep -q . && echo "$d"; done | wc -l
 
 ## values
 
