@@ -163,8 +163,8 @@ def draw_panel(ax, pcts: list[float], total: int, label: str) -> None:
 
     if not pcts:
         ax.text(0.5, 0.5, "No data available", ha="center", va="center",
-                transform=ax.transAxes, fontsize=13, color="grey")
-        ax.set_title(label, fontsize=14, fontweight="bold")
+                transform=ax.transAxes, fontsize=16, color="grey")
+        ax.set_title(label, fontsize=17, fontweight="bold")
         ax.axis("off")
         return
 
@@ -172,9 +172,9 @@ def draw_panel(ax, pcts: list[float], total: int, label: str) -> None:
 
     ax.bar(range(len(pcts)), pcts, color=color, edgecolor="none", width=1.0)
 
-    ax.set_title(label, fontsize=14, fontweight="bold", pad=8)
-    ax.set_ylabel("Adoption (%, log scale)", fontsize=12)
-    ax.set_xlabel("Libraries (sorted by adoption)", fontsize=12)
+    ax.set_title(label, fontsize=17, fontweight="bold", pad=8)
+    ax.set_ylabel("Adoption (%, log scale)", fontsize=15)
+    ax.set_xlabel("Libraries (sorted by adoption)", fontsize=15)
     ax.set_xlim(-1, len(pcts))
     ax.set_yscale("log")
     ax.set_ylim(max(0.01, min(pcts) * 0.5), max(pcts) * 2)
@@ -185,7 +185,7 @@ def draw_panel(ax, pcts: list[float], total: int, label: str) -> None:
     ax.set_axisbelow(True)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
-    ax.tick_params(axis="y", labelsize=11)
+    ax.tick_params(axis="y", labelsize=14)
 
 
 def main() -> None:
@@ -209,7 +209,7 @@ def main() -> None:
     fig, axes = plt.subplots(2, 3, figsize=(20, 10))
     fig.suptitle(
         "Direct Dependency Adoption Distribution by Framework",
-        fontsize=16, fontweight="bold", y=1.02,
+        fontsize=19, fontweight="bold", y=1.02,
     )
 
     for ax, (name, (pcts, total)) in zip(axes.flat, datasets):
