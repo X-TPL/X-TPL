@@ -1,8 +1,10 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
-Generate a single combined PDF comparing the top N most used direct dependencies
-across Flutter, React Native (TypeScript), React Native (JavaScript), Cordova,
-and MAUI.
+Direct dependency adoption distribution across all five groups.
+
+Each panel shows every direct dependency sorted by adoption rate (% of repos),
+highest first. No library names â€” the goal is to show the distribution shape
+(steep dropoff from popular to niche) rather than rank individual libraries.
 
 Saves combined_chart.pdf in the scripts/ directory.
 Run from anywhere: python scripts/combined_chart.py
@@ -16,28 +18,27 @@ from collections import defaultdict
 try:
     import yaml
 except ImportError:
-    yaml = None  # Flutter section will be skipped with a message
+    yaml = None
 
 SCRIPTS = pathlib.Path(__file__).parent.resolve()
-N = 20  # bars per panel
 
 
-# ---------- per-framework data collectors ----------
+# ---------- helpers ----------
 
-def _top(usage: dict[str, int], total: int, n: int) -> tuple[list[str], list[float]]:
-    top = sorted(usage.items(), key=lambda x: x[1], reverse=True)[:n]
-    names = [name for name, _ in reversed(top)]
-    pcts = [count / total * 100 if total else 0 for _, count in reversed(top)]
-    return names, pcts
+def _sorted_pcts(usage: dict[str, int], total: int) -> list[float]:
+    """All adoption percentages, sorted highest-first."""
+    return sorted([c / total * 100 for c in usage.values()], reverse=True)
 
 
-def collect_flutter(n: int) -> tuple[list[str], list[float], int]:
+# ---------- per-framework collectors ----------
+
+def collect_flutter() -> tuple[list[float], int]:
     if yaml is None:
-        print("pyyaml not installed — Flutter data unavailable (pip install pyyaml)")
-        return [], [], 0
+        print("pyyaml not installed â€” Flutter unavailable (pip install pyyaml)")
+        return [], 0
     output = SCRIPTS / "flutter" / "output"
     usage: dict[str, int] = defaultdict(int)
-    parsed = 0
+    total = 0
     for app_dir in sorted(output.iterdir()) if output.is_dir() else []:
         if not app_dir.is_dir():
             continue
@@ -59,13 +60,13 @@ def collect_flutter(n: int) -> tuple[list[str], list[float], int]:
                 usage[name] += 1
                 direct_found = True
         if direct_found:
-            parsed += 1
-    return *_top(usage, parsed, n), parsed
+            total += 1
+    return _sorted_pcts(usage, total), total
 
 
-def _collect_npm(output_dir: pathlib.Path, n: int) -> tuple[list[str], list[float], int]:
+def _collect_npm(output_dir: pathlib.Path) -> tuple[list[float], int]:
     usage: dict[str, int] = defaultdict(int)
-    parsed = 0
+    total = 0
     for app_dir in sorted(output_dir.iterdir()) if output_dir.is_dir() else []:
         if not app_dir.is_dir():
             continue
@@ -94,26 +95,14 @@ def _collect_npm(output_dir: pathlib.Path, n: int) -> tuple[list[str], list[floa
             if name in direct_names and name not in counted:
                 usage[name] += 1
                 counted.add(name)
-        parsed += 1
-    return *_top(usage, parsed, n), parsed
+        total += 1
+    return _sorted_pcts(usage, total), total
 
 
-def collect_rn_ts(n: int) -> tuple[list[str], list[float], int]:
-    return _collect_npm(SCRIPTS / "RN" / "output_ts", n)
-
-
-def collect_rn_js(n: int) -> tuple[list[str], list[float], int]:
-    return _collect_npm(SCRIPTS / "RN" / "output_js", n)
-
-
-def collect_cordova(n: int) -> tuple[list[str], list[float], int]:
-    return _collect_npm(SCRIPTS / "cordova" / "output", n)
-
-
-def collect_maui(n: int) -> tuple[list[str], list[float], int]:
+def collect_maui() -> tuple[list[float], int]:
     output = SCRIPTS / "maui" / "output"
     usage: dict[str, int] = defaultdict(int)
-    parsed = 0
+    total = 0
     for app_dir in sorted(output.iterdir()) if output.is_dir() else []:
         if not app_dir.is_dir():
             continue
@@ -132,7 +121,7 @@ def collect_maui(n: int) -> tuple[list[str], list[float], int]:
                         usage[name] += 1
                         direct_found = True
             if direct_found:
-                parsed += 1
+                total += 1
         else:
             csproj = next(iter(app_dir.glob("*.csproj")), None)
             if not csproj:
@@ -154,80 +143,73 @@ def collect_maui(n: int) -> tuple[list[str], list[float], int]:
                     usage[name] += 1
                     found = True
             if found:
-                parsed += 1
-    return *_top(usage, parsed, n), parsed
+                total += 1
+    return _sorted_pcts(usage, total), total
 
 
 # ---------- chart ----------
 
 COLORS = {
-    "Flutter":               "#1565C0",
-    "React Native (TS)":     "#1B5E20",
-    "React Native (JS)":     "#E65100",
-    "Cordova":               "#B71C1C",
-    "MAUI":                  "#4A148C",
+    "Flutter":           "#1565C0",
+    "React Native (TS)": "#1B5E20",
+    "React Native (JS)": "#E65100",
+    "Cordova":           "#B71C1C",
+    "MAUI":              "#4A148C",
 }
 
 
-def draw_panel(ax, names: list[str], pcts: list[float], total: int,
-               framework: str) -> None:
-    color = COLORS.get(framework, "#333333")
-    if not names:
+def draw_panel(ax, pcts: list[float], total: int, label: str) -> None:
+    color = COLORS.get(label, "#333333")
+
+    if not pcts:
         ax.text(0.5, 0.5, "No data available", ha="center", va="center",
                 transform=ax.transAxes, fontsize=10, color="grey")
-        ax.set_title(framework, fontsize=12, fontweight="bold")
+        ax.set_title(label, fontsize=11, fontweight="bold")
         ax.axis("off")
         return
 
-    bars = ax.barh(names, pcts, color=color, edgecolor="white", height=0.72)
-    for bar, pct in zip(bars, pcts):
-        ax.text(
-            bar.get_width() + 0.4,
-            bar.get_y() + bar.get_height() / 2,
-            f"{pct:.1f}%",
-            va="center", ha="left", fontsize=7.5,
-        )
+    ax.bar(range(len(pcts)), pcts, color=color, edgecolor="none", width=1.0)
 
-    ax.set_title(f"{framework}  (n = {total:,})", fontsize=11, fontweight="bold", pad=8)
-    ax.set_xlabel("% of repositories", fontsize=8)
-    ax.set_xlim(0, min(100, max(pcts) * 1.18))
+    ax.set_title(label, fontsize=10, fontweight="bold", pad=6)
+    ax.set_ylabel("Adoption (%)", fontsize=8)
+    ax.set_xlabel("Libraries (sorted by adoption)", fontsize=8)
+    ax.set_xlim(-1, len(pcts))
+    ax.set_ylim(0, max(pcts) * 1.1)
+    ax.set_xticks([])
+    ax.yaxis.grid(True, linestyle="--", alpha=0.45, linewidth=0.5)
+    ax.set_axisbelow(True)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
-    ax.tick_params(axis="y", labelsize=7.5)
-    ax.tick_params(axis="x", labelsize=8)
+    ax.tick_params(axis="y", labelsize=8)
 
 
 def main() -> None:
     try:
         import matplotlib.pyplot as plt
         import matplotlib
-        matplotlib.rcParams["pdf.fonttype"] = 42   # embeds fonts as TrueType (required by most journals)
+        matplotlib.rcParams["pdf.fonttype"] = 42
         matplotlib.rcParams["ps.fonttype"] = 42
     except ImportError:
-        print("matplotlib not installed — pip install matplotlib")
+        print("matplotlib not installed â€” pip install matplotlib")
         return
 
     datasets = [
-        ("Flutter",           collect_flutter(N)),
-        ("React Native (TS)", collect_rn_ts(N)),
-        ("React Native (JS)", collect_rn_js(N)),
-        ("Cordova",           collect_cordova(N)),
-        ("MAUI",              collect_maui(N)),
+        ("Flutter",           collect_flutter()),
+        ("React Native (TS)", _collect_npm(SCRIPTS / "RN" / "output_ts")),
+        ("React Native (JS)", _collect_npm(SCRIPTS / "RN" / "output_js")),
+        ("Cordova",           _collect_npm(SCRIPTS / "cordova" / "output")),
+        ("MAUI",              collect_maui()),
     ]
 
-    # 2 rows × 3 cols = 6 slots; 6th is hidden
-    bar_height = 0.45
-    fig_h = max(8, N * bar_height * 2 + 4)
-    fig, axes = plt.subplots(2, 3, figsize=(24, fig_h))
+    fig, axes = plt.subplots(2, 3, figsize=(20, 10))
     fig.suptitle(
-        f"Top {N} Most Used Direct Dependencies by Framework",
-        fontsize=14, fontweight="bold", y=1.01,
+        "Direct Dependency Adoption Distribution by Framework",
+        fontsize=13, fontweight="bold", y=1.02,
     )
 
-    for ax, (name, (names, pcts, total)) in zip(axes.flat, datasets):
-        draw_panel(ax, names, pcts, total, name)
+    for ax, (name, (pcts, total)) in zip(axes.flat, datasets):
+        draw_panel(ax, pcts, total, name)
 
-    # hide the unused 6th cell
     axes.flat[5].set_visible(False)
 
     fig.tight_layout(h_pad=3.5, w_pad=2.5)
@@ -239,3 +221,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
