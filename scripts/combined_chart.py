@@ -168,15 +168,20 @@ def draw_panel(ax, pcts: list[float], total: int, label: str) -> None:
         ax.axis("off")
         return
 
+    import matplotlib.ticker as ticker
+
     ax.bar(range(len(pcts)), pcts, color=color, edgecolor="none", width=1.0)
 
     ax.set_title(label, fontsize=10, fontweight="bold", pad=6)
-    ax.set_ylabel("Adoption (%)", fontsize=8)
+    ax.set_ylabel("Adoption (%, log scale)", fontsize=8)
     ax.set_xlabel("Libraries (sorted by adoption)", fontsize=8)
     ax.set_xlim(-1, len(pcts))
-    ax.set_ylim(0, max(pcts) * 1.1)
+    ax.set_yscale("log")
+    ax.set_ylim(max(0.01, min(pcts) * 0.5), max(pcts) * 2)
+    ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, _: f"{y:g}%"))
+    ax.yaxis.set_minor_formatter(ticker.NullFormatter())
     ax.set_xticks([])
-    ax.yaxis.grid(True, linestyle="--", alpha=0.45, linewidth=0.5)
+    ax.yaxis.grid(True, which="both", linestyle="--", alpha=0.45, linewidth=0.5)
     ax.set_axisbelow(True)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
