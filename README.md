@@ -147,3 +147,58 @@ cd scripts && python combined_chart.py
 Reads all framework output directories and writes `scripts/combined_chart.pdf` with a rank-frequency distribution panel for each framework.
 
 ---
+
+## Dataset structure
+
+
+```
+storage/
+|-- flutter_assets/                        Flutter           
+|   |-- repos.json
+|   |-- build_manifest.yaml
+|   |-- extracted/
+|   |   `-- <repo-id>/                     downloaded source code
+|   `-- output/
+|       |-- builds.csv
+|       |-- build.log
+|       `-- <repo-id>/
+|           |-- *.apk                      debug build APK(s)
+|           |-- build.log
+|           |-- r8/                        release build, R8-minified
+|           |   `-- *.apk
+|           `-- obfuscated/                release build with Dart obfuscation
+|               `-- *.apk
+|-- rn_assets_ts/                          React Native (TS) 
+|   |-- repos.json
+|   |-- build_manifest.yaml
+|   |-- extracted/
+|   |   `-- <repo-id>/
+|   `-- output/
+|       |-- builds.csv
+|       |-- build.log
+|       `-- <repo-id>/
+|           |-- *.apk
+|           |-- build.log
+|           |-- libs/                      extracted TPL .jar / .aar files
+|           `-- r8/
+|               |-- *.apk
+|               `-- libs/
+|-- rn_assets_js/                          React Native (JS)
+|   |-- repos.json
+|   |-- build_manifest.yaml
+|   |-- extracted/
+|   |   `-- <repo-id>/
+|   `-- output/                            (same structure as rn_assets_ts/output/)
+|-- cordova_assets/                        Cordova           
+|   |-- repos.json
+|   |-- build_manifest.yaml
+|   |-- extracted/
+|   |   `-- <repo-id>/
+|   `-- output/                            (same structure as rn_assets_ts/output/)
+`-- maui_assets/                           MAUI              
+    |-- repos.json
+    |-- build_manifest.yaml
+    |-- extracted/
+    |   `-- <repo-id>/
+    `-- output/                            (same structure as rn_assets_ts/output/)
+```

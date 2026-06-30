@@ -1,21 +1,6 @@
 
 
 
-
-## failing Docker builds
-3.26 & 3.29 & 3.38
-
-## bad pubspecs
-vyuh-tech-vyuh: declares workspace but workspace doesnt exist
-trufi-association
-## wrong flutter versions
-
-mo7amedaliEbaid-flutter_webview_template
-PSDTools-app
-Dragon863-myrunshaw
-zapstore
-fahim
-
 ## Tools
 
 To count apks: find . -name *.apk | wc -l
@@ -41,13 +26,3 @@ To find folders with less than 3 apks in the main dir: for d in */; do count=$(f
 To find folders with less than 9 apks (recursively): for d in */; do count=$(find "$d" -name "*.apk" | wc -l); [ "$count" -gt 0 ] && [ "$count" -lt 9 ] && echo "$count $d"; done
 
 To find folders with release apks: for d in */; do   find "$d" -wholename "*/r8/*.apk" -print -quit | grep -q . && echo "$d"; done | wc -l
-
-## values
-
-25.02. 36/79
-26.02. 43/79
-
-Repos: 1020
-downloaded: 901
-entries: 897
-built: 470
