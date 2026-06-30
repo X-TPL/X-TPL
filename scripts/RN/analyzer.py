@@ -3,8 +3,14 @@ import yaml
 from pathlib import Path
 import re
 import os
+from dotenv import load_dotenv
 
-EXTRACT_ROOT = Path("/home/ubuntu/storage/rn_assets/extracted")
+load_dotenv()
+STORAGE_ROOT = os.getenv("STORAGE_ROOT_RN")
+if not STORAGE_ROOT:
+    raise RuntimeError("STORAGE_ROOT_RN not set in environment")
+
+EXTRACT_ROOT = Path(STORAGE_ROOT) / "extracted"
 OUTPUT_FILE = "build_manifest.yaml"
 
 # -------------------------

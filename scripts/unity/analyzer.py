@@ -14,8 +14,14 @@ import os
 import re
 import yaml
 from pathlib import Path
+from dotenv import load_dotenv
 
-EXTRACT_ROOT = Path("/home/ubuntu/storage/unity_assets/extracted")
+load_dotenv()
+STORAGE_ROOT = os.getenv("STORAGE_ROOT_UNITY")
+if not STORAGE_ROOT:
+    raise RuntimeError("STORAGE_ROOT_UNITY not set in environment")
+
+EXTRACT_ROOT = Path(STORAGE_ROOT) / "extracted"
 OUTPUT_FILE = "build_manifest.yaml"
 
 SKIP_DIRS = {".git", "Library", "Temp", "Logs", "obj", "Build"}

@@ -4,8 +4,14 @@ from pathlib import Path
 import re
 import os
 import xml.etree.ElementTree as ET
+from dotenv import load_dotenv
 
-EXTRACT_ROOT = Path("/home/ubuntu/storage/cordova_assets/extracted")
+load_dotenv()
+STORAGE_ROOT = os.getenv("STORAGE_ROOT_CORDOVA")
+if not STORAGE_ROOT:
+    raise RuntimeError("STORAGE_ROOT_CORDOVA not set in environment")
+
+EXTRACT_ROOT = Path(STORAGE_ROOT) / "extracted"
 OUTPUT_FILE = "build_manifest.yaml"
 
 # -------------------------
