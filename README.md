@@ -99,6 +99,13 @@ cd scripts/flutter && python crawler.py
 
 Writes `repos.json` with repository metadata. Repeat for each framework directory.
 
+Each `crawler.py` defines two constants at the top of the file:
+
+- **`TARGET_BUILDABLE`** — the crawl stops once this many "buildable" repos (i.e. repos that pass the framework's heuristic checks, e.g. containing a `pubspec.yaml`/`package.json`/`.csproj`) have been collected. `1000` for all frameworks.
+- **`BATCH_SIZE`** — how many repos are scanned per GitHub search page before the `pushed:<timestamp>` cursor advances to the next page. `1000` for all frameworks (the GitHub Search API maximum per query).
+
+Lower `TARGET_BUILDABLE` to do a quick test run, or raise it to collect a larger dataset.
+
 ### Step 2 — Download repositories
 
 ```bash

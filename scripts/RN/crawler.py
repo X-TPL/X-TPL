@@ -5,7 +5,7 @@ from github import Github, Auth
 from dotenv import load_dotenv
 
 OUTPUT_FILE = "repos.json"
-TARGET_BUILDABLE = 100000
+TARGET_BUILDABLE = 1000
 BATCH_SIZE = 1000
 
 # -----------------------
