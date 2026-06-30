@@ -210,7 +210,7 @@ def build_app(app):
             [ -f package-lock.json ] && cp package-lock.json /output/ || true
             [ -f yarn.lock ] && cp yarn.lock /output/ || true
             mkdir -p /output/libs
-            find plugins platforms/android -name "*.jar" 2>/dev/null | grep -v "/build/" | while read f; do cp "$f" /output/libs/ 2>/dev/null; done || true
+            find plugins platforms/android -name "*.jar" -not -name "gradle-wrapper.jar" 2>/dev/null | grep -v "/build/" | while read f; do cp "$f" /output/libs/ 2>/dev/null; done || true
             find plugins platforms/android -name "*.aar" 2>/dev/null | grep -v "/build/" | while read f; do cp "$f" /output/libs/ 2>/dev/null; done || true
             """
             _csv = OUTPUT_DIR / "builds.csv"
@@ -328,7 +328,7 @@ def build_app(app):
             [ -f package-lock.json ] && cp package-lock.json /output/r8/ || true
             [ -f yarn.lock ] && cp yarn.lock /output/r8/ || true
             mkdir -p /output/r8/libs
-            find plugins platforms/android -name "*.jar" 2>/dev/null | grep -v "/build/" | while read f; do cp "$f" /output/r8/libs/ 2>/dev/null; done || true
+            find plugins platforms/android -name "*.jar" -not -name "gradle-wrapper.jar" 2>/dev/null | grep -v "/build/" | while read f; do cp "$f" /output/r8/libs/ 2>/dev/null; done || true
             find plugins platforms/android -name "*.aar" 2>/dev/null | grep -v "/build/" | while read f; do cp "$f" /output/r8/libs/ 2>/dev/null; done || true
             """
             _t = time.time()
