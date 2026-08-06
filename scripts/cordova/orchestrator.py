@@ -166,14 +166,24 @@ def build_app(app):
             cp platforms/android/app/build/outputs/apk/debug/*.apk /output/
 
             # ---- copy TPL metadata ----
+            [ -f config.xml ] && cp config.xml /output/ || true
             [ -f plugins/fetch.json ] && cp plugins/fetch.json /output/ || true
+            [ -f plugins/android.json ] && cp plugins/android.json /output/ || true
             [ -f platforms/android/app/build.gradle ] && cp platforms/android/app/build.gradle /output/app-build.gradle || true
+            [ -f platforms/android/build.gradle ] && cp platforms/android/build.gradle /output/root-build.gradle || true
+            [ -f platforms/android/settings.gradle ] && cp platforms/android/settings.gradle /output/ || true
             [ -f package.json ] && cp package.json /output/ || true
             [ -f package-lock.json ] && cp package-lock.json /output/ || true
             [ -f yarn.lock ] && cp yarn.lock /output/ || true
+            [ -f pnpm-lock.yaml ] && cp pnpm-lock.yaml /output/ || true
+            mkdir -p /output/plugin_manifests
+            find plugins -name "plugin.xml" 2>/dev/null | while read f; do cp "$f" /output/plugin_manifests/$(echo "$f" | tr '/' '_') 2>/dev/null; done || true
+            find plugins -name "*.gradle" 2>/dev/null | while read f; do cp "$f" /output/ 2>/dev/null; done || true
+            find platforms/android -name "*.gradle" 2>/dev/null | grep -v "/build/" | while read f; do cp "$f" /output/ 2>/dev/null; done || true
             mkdir -p /output/libs
             find plugins platforms/android -name "*.jar" -not -name "gradle-wrapper.jar" 2>/dev/null | grep -v "/build/" | while read f; do cp "$f" /output/libs/ 2>/dev/null; done || true
             find plugins platforms/android -name "*.aar" 2>/dev/null | grep -v "/build/" | while read f; do cp "$f" /output/libs/ 2>/dev/null; done || true
+            find plugins platforms/android -name "*.so" 2>/dev/null | grep -v "/build/" | while read f; do cp "$f" /output/libs/ 2>/dev/null; done || true
             """
             _csv = OUTPUT_DIR / "builds.csv"
 
@@ -287,14 +297,24 @@ def build_app(app):
             cp platforms/android/app/build/outputs/apk/release/*.apk /output/r8/
 
             # ---- copy TPL metadata ----
+            [ -f config.xml ] && cp config.xml /output/r8/ || true
             [ -f plugins/fetch.json ] && cp plugins/fetch.json /output/r8/ || true
+            [ -f plugins/android.json ] && cp plugins/android.json /output/r8/ || true
             [ -f platforms/android/app/build.gradle ] && cp platforms/android/app/build.gradle /output/r8/app-build.gradle || true
+            [ -f platforms/android/build.gradle ] && cp platforms/android/build.gradle /output/r8/root-build.gradle || true
+            [ -f platforms/android/settings.gradle ] && cp platforms/android/settings.gradle /output/r8/ || true
             [ -f package.json ] && cp package.json /output/r8/ || true
             [ -f package-lock.json ] && cp package-lock.json /output/r8/ || true
             [ -f yarn.lock ] && cp yarn.lock /output/r8/ || true
+            [ -f pnpm-lock.yaml ] && cp pnpm-lock.yaml /output/r8/ || true
+            mkdir -p /output/r8/plugin_manifests
+            find plugins -name "plugin.xml" 2>/dev/null | while read f; do cp "$f" /output/r8/plugin_manifests/$(echo "$f" | tr '/' '_') 2>/dev/null; done || true
+            find plugins -name "*.gradle" 2>/dev/null | while read f; do cp "$f" /output/r8/ 2>/dev/null; done || true
+            find platforms/android -name "*.gradle" 2>/dev/null | grep -v "/build/" | while read f; do cp "$f" /output/r8/ 2>/dev/null; done || true
             mkdir -p /output/r8/libs
             find plugins platforms/android -name "*.jar" -not -name "gradle-wrapper.jar" 2>/dev/null | grep -v "/build/" | while read f; do cp "$f" /output/r8/libs/ 2>/dev/null; done || true
             find plugins platforms/android -name "*.aar" 2>/dev/null | grep -v "/build/" | while read f; do cp "$f" /output/r8/libs/ 2>/dev/null; done || true
+            find plugins platforms/android -name "*.so" 2>/dev/null | grep -v "/build/" | while read f; do cp "$f" /output/r8/libs/ 2>/dev/null; done || true
             """
             _t = time.time()
             _ok = True

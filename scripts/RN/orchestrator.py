@@ -156,10 +156,19 @@ def build_app(app):
                 [ -f ../package.json ] && cp ../package.json /output/ || true
                 [ -f ../package-lock.json ] && cp ../package-lock.json /output/ || true
                 [ -f ../yarn.lock ] && cp ../yarn.lock /output/ || true
+                [ -f ../pnpm-lock.yaml ] && cp ../pnpm-lock.yaml /output/ || true
                 [ -f app/build.gradle ] && cp app/build.gradle /output/android-build.gradle || true
+                [ -f build.gradle ] && cp build.gradle /output/root-build.gradle || true
+                [ -f build.gradle.kts ] && cp build.gradle.kts /output/root-build.gradle.kts || true
+                [ -f settings.gradle ] && cp settings.gradle /output/ || true
+                [ -f settings.gradle.kts ] && cp settings.gradle.kts /output/ || true
+                [ -f gradle/libs.versions.toml ] && cp gradle/libs.versions.toml /output/ || true
+                find . -name "*.gradle" 2>/dev/null | grep -v "/build/" | grep -v "/.gradle/" | grep -v "/node_modules/" | while read f; do cp "$f" /output/ 2>/dev/null; done || true
+                find . -name "*.gradle.kts" 2>/dev/null | grep -v "/build/" | grep -v "/.gradle/" | grep -v "/node_modules/" | while read f; do cp "$f" /output/ 2>/dev/null; done || true
                 mkdir -p /output/libs
-                find . -name "*.jar" -not -name "gradle-wrapper.jar" 2>/dev/null | grep -v "/build/" | grep -v "/.gradle/" | while read f; do cp "$f" /output/libs/ 2>/dev/null; done || true
-                find . -name "*.aar" 2>/dev/null | grep -v "/build/" | grep -v "/.gradle/" | while read f; do cp "$f" /output/libs/ 2>/dev/null; done || true
+                find . -name "*.jar" -not -name "gradle-wrapper.jar" 2>/dev/null | grep -v "/build/" | grep -v "/.gradle/" | grep -v "/node_modules/" | while read f; do cp "$f" /output/libs/ 2>/dev/null; done || true
+                find . -name "*.aar" 2>/dev/null | grep -v "/build/" | grep -v "/.gradle/" | grep -v "/node_modules/" | while read f; do cp "$f" /output/libs/ 2>/dev/null; done || true
+                find . -name "*.so" 2>/dev/null | grep -v "/build/" | grep -v "/.gradle/" | grep -v "/node_modules/" | while read f; do cp "$f" /output/libs/ 2>/dev/null; done || true
                     """
                 ], log_file)
             except Exception:
@@ -329,10 +338,19 @@ def build_app(app):
                 [ -f ../package.json ] && cp ../package.json /output/r8/ || true
                 [ -f ../package-lock.json ] && cp ../package-lock.json /output/r8/ || true
                 [ -f ../yarn.lock ] && cp ../yarn.lock /output/r8/ || true
+                [ -f ../pnpm-lock.yaml ] && cp ../pnpm-lock.yaml /output/r8/ || true
                 [ -f app/build.gradle ] && cp app/build.gradle /output/r8/android-build.gradle || true
+                [ -f build.gradle ] && cp build.gradle /output/r8/root-build.gradle || true
+                [ -f build.gradle.kts ] && cp build.gradle.kts /output/r8/root-build.gradle.kts || true
+                [ -f settings.gradle ] && cp settings.gradle /output/r8/ || true
+                [ -f settings.gradle.kts ] && cp settings.gradle.kts /output/r8/ || true
+                [ -f gradle/libs.versions.toml ] && cp gradle/libs.versions.toml /output/r8/ || true
+                find . -name "*.gradle" 2>/dev/null | grep -v "/build/" | grep -v "/.gradle/" | grep -v "/node_modules/" | while read f; do cp "$f" /output/r8/ 2>/dev/null; done || true
+                find . -name "*.gradle.kts" 2>/dev/null | grep -v "/build/" | grep -v "/.gradle/" | grep -v "/node_modules/" | while read f; do cp "$f" /output/r8/ 2>/dev/null; done || true
                 mkdir -p /output/r8/libs
-                find . -name "*.jar" -not -name "gradle-wrapper.jar" 2>/dev/null | grep -v "/build/" | grep -v "/.gradle/" | while read f; do cp "$f" /output/r8/libs/ 2>/dev/null; done || true
-                find . -name "*.aar" 2>/dev/null | grep -v "/build/" | grep -v "/.gradle/" | while read f; do cp "$f" /output/r8/libs/ 2>/dev/null; done || true
+                find . -name "*.jar" -not -name "gradle-wrapper.jar" 2>/dev/null | grep -v "/build/" | grep -v "/.gradle/" | grep -v "/node_modules/" | while read f; do cp "$f" /output/r8/libs/ 2>/dev/null; done || true
+                find . -name "*.aar" 2>/dev/null | grep -v "/build/" | grep -v "/.gradle/" | grep -v "/node_modules/" | while read f; do cp "$f" /output/r8/libs/ 2>/dev/null; done || true
+                find . -name "*.so" 2>/dev/null | grep -v "/build/" | grep -v "/.gradle/" | grep -v "/node_modules/" | while read f; do cp "$f" /output/r8/libs/ 2>/dev/null; done || true
                     """
                 ], log_file)
             except Exception:

@@ -205,7 +205,15 @@ def build_app(app):
                 flutter build {output_type} --debug --no-pub --split-per-abi && \
                 cp build/app/outputs/flutter-apk/*.apk /output/ && \
                 cp .dart_tool/package_config.json /output/ && \
-                cp pubspec.lock /output/
+                cp pubspec.lock /output/ && \
+                cp pubspec.yaml /output/ 2>/dev/null || true && \
+                mkdir -p /output/libs && \
+                find android -name "*.gradle" 2>/dev/null | grep -v "/build/" | grep -v "/.gradle/" | while read f; do cp "$f" /output/ 2>/dev/null; done || true && \
+                find android -name "*.gradle.kts" 2>/dev/null | grep -v "/build/" | grep -v "/.gradle/" | while read f; do cp "$f" /output/ 2>/dev/null; done || true && \
+                find android -name "*.toml" 2>/dev/null | grep -v "/build/" | grep -v "/.gradle/" | while read f; do cp "$f" /output/ 2>/dev/null; done || true && \
+                find . -name "*.jar" -not -name "gradle-wrapper.jar" 2>/dev/null | grep -v "/build/" | grep -v "/.gradle/" | while read f; do cp "$f" /output/libs/ 2>/dev/null; done || true && \
+                find . -name "*.aar" 2>/dev/null | grep -v "/build/" | grep -v "/.gradle/" | while read f; do cp "$f" /output/libs/ 2>/dev/null; done || true && \
+                find . -name "*.so" 2>/dev/null | grep -v "/build/" | grep -v "/.gradle/" | while read f; do cp "$f" /output/libs/ 2>/dev/null; done || true
                     """
                 ], log_file)
             except Exception:
