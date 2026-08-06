@@ -62,5 +62,9 @@ RUN git clone https://github.com/flutter/flutter.git \
 ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false -Xmx4g"
 ENV ORG_GRADLE_PROJECT_org.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g -Dkotlin.daemon.jvm.options=-Xmx4g"
 
+# ---------- gradle proxy ----------
+RUN echo "systemProp.socksProxyHost=172.17.0.1" >> /opt/gradle/gradle.properties && \
+    echo "systemProp.socksProxyPort=9050" >> /opt/gradle/gradle.properties
+
 # ---------- workdir ----------
 WORKDIR /app
