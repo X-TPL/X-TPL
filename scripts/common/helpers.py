@@ -8,6 +8,10 @@ import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
+def normalize_path(path) -> str:
+    return str(pathlib.Path(path).as_posix())
+
+
 def run(cmd, log_file: pathlib.Path, check=True, timeout=7200):
     with log_file.open("a") as f:
         f.write("\n> " + " ".join(cmd) + "\n")

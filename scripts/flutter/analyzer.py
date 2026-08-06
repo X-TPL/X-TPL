@@ -1,9 +1,13 @@
 import os
 import re
+import sys
 import yaml
 from pathlib import Path
 from packaging.version import Version
 from dotenv import load_dotenv
+
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from scripts.common.helpers import normalize_path
 
 load_dotenv()
 STORAGE_ROOT = os.getenv("STORAGE_ROOT_FLUTTER")
@@ -63,9 +67,6 @@ DART_TO_FLUTTER = [
 # -------------------------
 # Utilities
 # -------------------------
-
-def normalize_path(path: Path) -> str:
-    return str(path.as_posix())
 
 
 def flutter_from_dart(dart_version: str) -> str:

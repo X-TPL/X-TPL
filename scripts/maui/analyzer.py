@@ -1,9 +1,13 @@
+import sys
 import yaml
 import os
 import re
 from pathlib import Path
 import xml.etree.ElementTree as ET
 from dotenv import load_dotenv
+
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from scripts.common.helpers import normalize_path
 
 load_dotenv()
 STORAGE_ROOT = os.getenv("STORAGE_ROOT_MAUI")
@@ -19,9 +23,6 @@ SKIP_DIRS = {".git", "bin", "obj", "packages", ".vs", ".idea", "TestResults"}
 # -------------------------
 # Utilities
 # -------------------------
-
-def normalize_path(path: Path) -> str:
-    return str(path.as_posix())
 
 
 def pick_jdk(dotnet_version: int) -> int:

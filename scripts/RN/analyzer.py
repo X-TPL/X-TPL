@@ -1,9 +1,13 @@
 import json
+import sys
 import yaml
 from pathlib import Path
 import re
 import os
 from dotenv import load_dotenv
+
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from scripts.common.helpers import normalize_path
 
 load_dotenv()
 STORAGE_ROOT = os.getenv("STORAGE_ROOT_RN")
@@ -16,9 +20,6 @@ OUTPUT_FILE = "build_manifest.yaml"
 # -------------------------
 # Utilities
 # -------------------------
-
-def normalize_path(path: Path) -> str:
-    return str(path.as_posix())
 
 
 def _normalize_node_version(version_str: str) -> str:
