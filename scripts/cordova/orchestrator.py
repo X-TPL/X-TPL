@@ -83,8 +83,6 @@ def build_app(app):
             rm -rf platforms plugins node_modules || true
             rm -rf $GRADLE_USER_HOME || true
             mkdir -p $GRADLE_USER_HOME
-            echo "systemProp.socksProxyHost=172.17.0.1" >> $GRADLE_USER_HOME/gradle.properties
-            echo "systemProp.socksProxyPort=9050" >> $GRADLE_USER_HOME/gradle.properties
 
             # unset Gradle options
             unset JAVA_OPTS
@@ -212,8 +210,6 @@ def build_app(app):
             rm -rf platforms plugins node_modules || true
             rm -rf $GRADLE_USER_HOME || true
             mkdir -p $GRADLE_USER_HOME
-            echo "systemProp.socksProxyHost=172.17.0.1" >> $GRADLE_USER_HOME/gradle.properties
-            echo "systemProp.socksProxyPort=9050" >> $GRADLE_USER_HOME/gradle.properties
 
             # unset Gradle options
             unset JAVA_OPTS
