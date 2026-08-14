@@ -189,7 +189,6 @@ def build_app(app):
                     "-v", f"{app_path}:/source:ro",
                     "-v", f"{out_dir}:/output",
                     "-v", f"{pathlib.Path.home()}/.pub-cache:/root/.pub-cache",
-                    "-v", f"{pathlib.Path.home()}/.gradle:/opt/gradle",
                     image_tag(flutter_version, jdk_version),
                     "bash", "-c",
                     f"""
