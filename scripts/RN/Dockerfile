@@ -65,6 +65,10 @@ RUN $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
     "build-tools;34.0.0" \
     "cmake;3.22.1" 
 
+# ---------- patch SDK XMLs for old AGP compatibility ----------
+RUN find $ANDROID_HOME/platforms -name "package.xml" -exec \
+    sed -i 's|<extension-level>[^<]*</extension-level>||g' {} \;
+
 # ---------- gradle stability ----------
 ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false -Xmx4g"
 ENV ORG_GRADLE_PROJECT_org.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g -Dkotlin.daemon.jvm.options=-Xmx2g"
