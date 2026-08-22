@@ -24,12 +24,13 @@ def download_repos(storage_root: str | Path):
 
             print(f"[download] {repo['full_name']}")
 
-            response = requests.get(repo["zip_url"], stream=True)
+            response = requests.get(repo["zip_url"], stream=True, timeout=(10, 60))
             response.raise_for_status()
 
             with open(zip_path, "wb") as f:
                 for chunk in response.iter_content(chunk_size=8192):
-                    f.write(chunk)
+                    if chunk:
+                        f.write(chunk)
 
             with ZipFile(zip_path, "r") as z:
                 z.extractall(extract_root / name)
