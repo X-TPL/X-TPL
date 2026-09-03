@@ -59,8 +59,12 @@ def main():
 
         copied = 0
         for app in batch:
+            # Walk up from the manifest path to find the top-level repo root
+            # (id is always the name of that root directory)
             src = Path(app["path"])
-            dst = repos_dir / src.name
+            while src.name != app["id"] and src.parent != src:
+                src = src.parent
+            dst = repos_dir / app["id"]
 
             if dst.exists():
                 print(f"  [skip] {src.name} already at destination")
