@@ -92,7 +92,6 @@ def build_app(app):
                     "-v", f"{app_path}:/source:ro",
                     "-v", f"{out_dir}:/output",
                     "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
-                    "-v", f"{pathlib.Path.home()}/.gradle:/root/gradle",
                     image_tag(node_version, jdk_version),
                     "bash", "-c",
                     f"""
@@ -116,13 +115,30 @@ def build_app(app):
                 # ---- detect expo ----
                 if grep -q '"expo"' package.json && [ ! -d android ]; then
                     echo "Expo project detected";
-                    CI=1 npx expo prebuild --platform android
+                    CI=1 npx --yes expo prebuild --platform android
                 fi && \
 
                 export PATH="/app/node_modules/.bin:$PATH" && \
                 cd android && \
 
                 chmod +x gradlew && \
+
+                # ---- inject fallback repositories via Gradle init script ----
+                mkdir -p $GRADLE_USER_HOME/init.d && \
+                echo 'gradle.beforeProject {{project ->' > $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '  project.buildscript.repositories {{' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '    maven {{url "https://maven.google.com"}}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '    maven {{url "https://repo1.maven.org/maven2"}}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '    maven {{url "https://plugins.gradle.org/m2/"}}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '    maven {{url "https://jitpack.io"}}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '  }}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '  project.repositories {{' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '    maven {{url "https://maven.google.com"}}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '    maven {{url "https://repo1.maven.org/maven2"}}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '    maven {{url "https://plugins.gradle.org/m2/"}}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '    maven {{url "https://jitpack.io"}}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '  }}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '}}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
 
                 # ---- patch settings.gradle to use local react-native CLI (avoids npx failures) ----
                 sed -i 's/autolinkLibrariesWithCommand()/autolinkLibrariesWithCommand("node node_modules\/.bin\/react-native config")/' settings.gradle 2>/dev/null || true && \
@@ -185,7 +201,6 @@ def build_app(app):
                     "-v", f"{app_path}:/source:ro",
                     "-v", f"{out_dir}:/output",
                     "-v", f"{pathlib.Path.home()}/.npm:/root/.npm",
-                    "-v", f"{pathlib.Path.home()}/.gradle:/root/gradle",
                     image_tag(node_version, jdk_version),
                     "bash", "-c",
                     f"""
@@ -234,7 +249,7 @@ def build_app(app):
                 # ---- detect expo ----
                 if grep -q '"expo"' package.json && [ ! -d android ]; then
                     echo "Expo project detected";
-                    CI=1 npx expo prebuild --platform android
+                    CI=1 npx --yes expo prebuild --platform android
                 fi && \
 
                 # ---- fix expo/metro-config: serializer + Flow transformIgnorePatterns ----
@@ -297,6 +312,23 @@ def build_app(app):
                 cd android && \
 
                 chmod +x gradlew && \
+
+                # ---- inject fallback repositories via Gradle init script ----
+                mkdir -p $GRADLE_USER_HOME/init.d && \
+                echo 'gradle.beforeProject {{project ->' > $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '  project.buildscript.repositories {{' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '    maven {{url "https://maven.google.com"}}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '    maven {{url "https://repo1.maven.org/maven2"}}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '    maven {{url "https://plugins.gradle.org/m2/"}}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '    maven {{url "https://jitpack.io"}}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '  }}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '  project.repositories {{' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '    maven {{url "https://maven.google.com"}}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '    maven {{url "https://repo1.maven.org/maven2"}}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '    maven {{url "https://plugins.gradle.org/m2/"}}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '    maven {{url "https://jitpack.io"}}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '  }}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
+                echo '}}' >> $GRADLE_USER_HOME/init.d/repos.gradle && \
 
                 # ---- patch settings.gradle to use local react-native CLI (avoids npx failures) ----
                 sed -i 's/autolinkLibrariesWithCommand()/autolinkLibrariesWithCommand("node node_modules\/.bin\/react-native config")/' settings.gradle 2>/dev/null || true && \

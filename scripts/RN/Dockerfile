@@ -66,7 +66,7 @@ RUN $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
     "cmake;3.22.1" 
 
 # ---------- patch SDK XMLs for old AGP compatibility ----------
-RUN find $ANDROID_HOME/platforms -name "package.xml" -exec \
+RUN find $ANDROID_HOME -name "package.xml" -exec \
     sed -i 's|<extension-level>[^<]*</extension-level>||g' {} \;
 
 # ---------- gradle stability ----------
