@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="260pt" height="166pt" viewBox="0 0 260 166" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ah" viewBox="0 0 6 6" refX="5.5" refY="3" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M0,0.5 L6,3 L0,5.5 z" fill="#333"/>
+    </marker>
+  </defs>
+  <rect width="260" height="166" fill="#fff"/>
+
+  <!-- ===== external services ===== -->
+  <g fill="#EDEDED" stroke="#7A7A7A" stroke-width="0.7">
+    <rect x="4" y="2" width="116" height="20" rx="2"/>
+    <rect x="178" y="2" width="80" height="20" rx="2"/>
+  </g>
+  <g text-anchor="middle" fill="#1a1a1a">
+    <text x="62" y="10.5" font-size="6.5" font-weight="bold">GitHub</text>
+    <text x="62" y="18.5" font-size="5.8">Search API · ZIP archives</text>
+    <text x="218" y="10.5" font-size="6.5" font-weight="bold">Docker</text>
+    <text x="218" y="18.5" font-size="5.8">package registries</text>
+  </g>
+  <g stroke="#333" stroke-width="0.8">
+    <line x1="31" y1="23.5" x2="31" y2="31" marker-start="url(#ah)" marker-end="url(#ah)"/>
+    <line x1="89" y1="22" x2="89" y2="31" marker-end="url(#ah)"/>
+    <line x1="205" y1="22" x2="205" y2="31" marker-end="url(#ah)"/>
+  </g>
+
+  <!-- ===== modules ===== -->
+  <g stroke-width="0.9">
+    <rect x="4" y="32" width="54" height="42" rx="3" fill="#DCEBF7" stroke="#0072B2"/>
+    <rect x="62" y="32" width="54" height="42" rx="3" fill="#FCEBC9" stroke="#C98500"/>
+    <rect x="120" y="32" width="54" height="42" rx="3" fill="#D3EFE5" stroke="#009E73"/>
+    <rect x="178" y="32" width="54" height="42" rx="3" fill="#F9DDCB" stroke="#D55E00"/>
+  </g>
+  <circle cx="12" cy="40" r="4.8" fill="#0072B2"/>
+  <circle cx="70" cy="40" r="4.8" fill="#C98500"/>
+  <circle cx="128" cy="40" r="4.8" fill="#009E73"/>
+  <circle cx="186" cy="40" r="4.8" fill="#D55E00"/>
+  <g font-size="6" font-weight="bold" fill="#fff" text-anchor="middle">
+    <text x="12" y="42.2">1</text>
+    <text x="70" y="42.2">2</text>
+    <text x="128" y="42.2">3</text>
+    <text x="186" y="42.2">4</text>
+  </g>
+  <g font-size="7.2" font-weight="bold" fill="#1a1a1a" text-anchor="middle">
+    <text x="31" y="54">Crawler</text>
+    <text x="89" y="54">Downloader</text>
+    <text x="147" y="54">Analyzer</text>
+    <text x="205" y="54">Orchestrator</text>
+  </g>
+  <g font-size="5.2" fill="#444" text-anchor="middle" font-family="Consolas, 'Courier New', monospace">
+    <text x="31" y="63">crawler.py</text>
+    <text x="89" y="63">process_repos.py</text>
+    <text x="147" y="63">analyzer.py</text>
+    <text x="205" y="63">orchestrator.py</text>
+  </g>
+  <g font-size="5.8" font-style="italic" fill="#555" text-anchor="middle">
+    <text x="31" y="71">discover</text>
+    <text x="89" y="71">fetch</text>
+    <text x="147" y="71">configure</text>
+    <text x="205" y="71">build</text>
+  </g>
+
+  <!-- retry loop on orchestrator -->
+  <path d="M232,42 C244,42 244,62 233.5,62" fill="none" stroke="#D55E00" stroke-width="0.8" marker-end="url(#ah)"/>
+  <text x="244.5" y="54.5" font-size="5.2" font-style="italic" fill="#555">retry</text>
+
+  <!-- ===== data artifacts ===== -->
+  <g fill="#fff" stroke="#555" stroke-width="0.7">
+    <path d="M36,94 H80 L84,98 V114 H36 Z"/>
+    <path d="M94,94 H138 L142,98 V114 H94 Z"/>
+    <path d="M152,94 H196 L200,98 V114 H152 Z"/>
+    <path d="M210,94 H254 L258,98 V114 H210 Z"/>
+  </g>
+  <g fill="none" stroke="#555" stroke-width="0.7">
+    <path d="M80,94 V98 H84"/>
+    <path d="M138,94 V98 H142"/>
+    <path d="M196,94 V98 H200"/>
+    <path d="M254,94 V98 H258"/>
+  </g>
+  <g text-anchor="middle" fill="#1a1a1a" font-family="Consolas, 'Courier New', monospace">
+    <text x="60" y="106" font-size="5.4">repos.json</text>
+    <text x="118" y="106" font-size="5.4">extracted/</text>
+    <text x="176" y="102.5" font-size="5.2">build_manifest</text>
+    <text x="176" y="109.5" font-size="5.2">.yaml</text>
+    <text x="234" y="102.5" font-size="5.4">output/</text>
+  </g>
+  <text x="234" y="109.8" font-size="5" fill="#555" text-anchor="middle">APKs, locks, logs</text>
+
+  <!-- ===== zig-zag data flow ===== -->
+  <g stroke="#333" stroke-width="0.8" marker-end="url(#ah)">
+    <line x1="41" y1="74" x2="52" y2="94"/>
+    <line x1="68" y1="94" x2="79" y2="74"/>
+    <line x1="99" y1="74" x2="110" y2="94"/>
+    <line x1="126" y1="94" x2="137" y2="74"/>
+    <line x1="157" y1="74" x2="168" y2="94"/>
+    <line x1="184" y1="94" x2="195" y2="74"/>
+    <line x1="215" y1="74" x2="226" y2="94"/>
+    <line x1="234" y1="114" x2="234" y2="124"/>
+  </g>
+
+  <!-- downstream: TPL analysis -->
+  <rect x="186" y="124" width="72" height="20" rx="3" fill="#F3E6EF" stroke="#A8508A" stroke-width="0.9" stroke-dasharray="3 2"/>
+  <text x="222" y="133" font-size="6.5" font-weight="bold" fill="#1a1a1a" text-anchor="middle">TPL analysis</text>
+  <text x="222" y="140.8" font-size="5.2" fill="#444" text-anchor="middle" font-family="Consolas, 'Courier New', monospace">analyze_tpls.py</text>
+
+  <!-- frameworks -->
+  <text x="4" y="130" font-size="5.8" font-style="italic" fill="#555">One pipeline instance per framework:</text>
+  <g fill="#fff" stroke="#888" stroke-width="0.6">
+    <rect x="4" y="134" width="26" height="9" rx="4.5"/>
+    <rect x="33" y="134" width="40" height="9" rx="4.5"/>
+    <rect x="76" y="134" width="27" height="9" rx="4.5"/>
+    <rect x="106" y="134" width="21" height="9" rx="4.5"/>
+  </g>
+  <g font-size="5.4" fill="#1a1a1a" text-anchor="middle">
+    <text x="17" y="140.6">Flutter</text>
+    <text x="53" y="140.6">React Native</text>
+    <text x="89.5" y="140.6">Cordova</text>
+    <text x="116.5" y="140.6">MAUI</text>
+  </g>
+
+  <!-- ===== legend ===== -->
+  <g stroke-width="0.6">
+    <rect x="4" y="154" width="2.5" height="7" fill="#0072B2"/>
+    <rect x="6.5" y="154" width="2.5" height="7" fill="#C98500"/>
+    <rect x="9" y="154" width="2.5" height="7" fill="#009E73"/>
+    <rect x="11.5" y="154" width="2.5" height="7" fill="#D55E00"/>
+    <path d="M44,154 H51.5 L54,156.5 V161 H44 Z" fill="#fff" stroke="#555"/>
+    <rect x="104" y="154" width="10" height="7" fill="#EDEDED" stroke="#7A7A7A"/>
+    <rect x="172" y="154" width="10" height="7" fill="#F3E6EF" stroke="#A8508A" stroke-dasharray="2 1"/>
+  </g>
+  <g font-size="5.8" fill="#1a1a1a">
+    <text x="17" y="160.2">Module</text>
+    <text x="57" y="160.2">Data artifact</text>
+    <text x="117" y="160.2">External service</text>
+    <text x="185" y="160.2">Downstream</text>
+  </g>
+</svg>

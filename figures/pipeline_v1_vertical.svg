@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="252pt" height="384pt" viewBox="0 0 252 384" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ah" viewBox="0 0 6 6" refX="5.5" refY="3" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M0,0.5 L6,3 L0,5.5 z" fill="#333"/>
+    </marker>
+    <marker id="ahV" viewBox="0 0 6 6" refX="5.5" refY="3" markerWidth="4" markerHeight="4" orient="auto">
+      <path d="M0,0.5 L6,3 L0,5.5 z" fill="#D55E00"/>
+    </marker>
+  </defs>
+  <rect width="252" height="384" fill="#fff"/>
+
+  <!-- ===== flow arrows (central spine) ===== -->
+  <g stroke="#333" stroke-width="0.8" marker-end="url(#ah)">
+    <line x1="81" y1="46" x2="81" y2="56"/>
+    <line x1="81" y1="70" x2="81" y2="80"/>
+    <line x1="81" y1="120" x2="81" y2="130"/>
+    <line x1="81" y1="144" x2="81" y2="154"/>
+    <line x1="81" y1="194" x2="81" y2="204"/>
+    <line x1="81" y1="218" x2="81" y2="228"/>
+    <line x1="81" y1="300" x2="81" y2="310"/>
+    <line x1="81" y1="324" x2="81" y2="334"/>
+  </g>
+
+  <!-- ===== 1 Crawler ===== -->
+  <rect x="6" y="6" width="150" height="40" rx="3" fill="#DCEBF7" stroke="#0072B2" stroke-width="0.9"/>
+  <circle cx="17" cy="18" r="6" fill="#0072B2"/>
+  <text x="17" y="20.5" font-size="7" font-weight="bold" fill="#fff" text-anchor="middle">1</text>
+  <text x="27" y="20.6" font-size="8" font-weight="bold" fill="#1a1a1a">Crawler</text>
+  <text x="150" y="20.6" font-size="6" fill="#444" text-anchor="end" font-family="Consolas, 'Courier New', monospace">crawler.py</text>
+  <text x="14" y="32" font-size="6.5" fill="#1a1a1a">Searches GitHub for framework projects;</text>
+  <text x="14" y="40.5" font-size="6.5" fill="#1a1a1a">keeps repos passing buildability checks</text>
+
+  <!-- artifact: repos.json -->
+  <path d="M19,56 H138 L143,61 V70 H19 Z" fill="#fff" stroke="#555" stroke-width="0.7"/>
+  <path d="M138,56 V61 H143" fill="none" stroke="#555" stroke-width="0.7"/>
+  <text x="81" y="65.2" font-size="6.2" text-anchor="middle" fill="#1a1a1a"><tspan font-family="Consolas, 'Courier New', monospace">repos.json</tspan><tspan fill="#555"> · repository metadata</tspan></text>
+
+  <!-- ===== 2 Downloader ===== -->
+  <rect x="6" y="80" width="150" height="40" rx="3" fill="#FCEBC9" stroke="#C98500" stroke-width="0.9"/>
+  <circle cx="17" cy="92" r="6" fill="#C98500"/>
+  <text x="17" y="94.5" font-size="7" font-weight="bold" fill="#fff" text-anchor="middle">2</text>
+  <text x="27" y="94.6" font-size="8" font-weight="bold" fill="#1a1a1a">Downloader</text>
+  <text x="150" y="94.6" font-size="6" fill="#444" text-anchor="end" font-family="Consolas, 'Courier New', monospace">process_repos.py</text>
+  <text x="14" y="106" font-size="6.5" fill="#1a1a1a">Downloads each repository as a ZIP</text>
+  <text x="14" y="114.5" font-size="6.5" fill="#1a1a1a">archive and extracts it to local storage</text>
+
+  <!-- artifact: extracted/ -->
+  <path d="M19,130 H138 L143,135 V144 H19 Z" fill="#fff" stroke="#555" stroke-width="0.7"/>
+  <path d="M138,130 V135 H143" fill="none" stroke="#555" stroke-width="0.7"/>
+  <text x="81" y="139.2" font-size="6.2" text-anchor="middle" fill="#1a1a1a"><tspan font-family="Consolas, 'Courier New', monospace">extracted/</tspan><tspan fill="#555"> · source trees</tspan></text>
+
+  <!-- ===== 3 Analyzer ===== -->
+  <rect x="6" y="154" width="150" height="40" rx="3" fill="#D3EFE5" stroke="#009E73" stroke-width="0.9"/>
+  <circle cx="17" cy="166" r="6" fill="#009E73"/>
+  <text x="17" y="168.5" font-size="7" font-weight="bold" fill="#fff" text-anchor="middle">3</text>
+  <text x="27" y="168.6" font-size="8" font-weight="bold" fill="#1a1a1a">Analyzer</text>
+  <text x="150" y="168.6" font-size="6" fill="#444" text-anchor="end" font-family="Consolas, 'Courier New', monospace">analyzer.py</text>
+  <text x="14" y="180" font-size="6.5" fill="#1a1a1a">Locates the app root and infers toolchain</text>
+  <text x="14" y="188.5" font-size="6.5" fill="#1a1a1a">versions (SDK, Node, JDK) per project</text>
+
+  <!-- artifact: build_manifest.yaml -->
+  <path d="M19,204 H138 L143,209 V218 H19 Z" fill="#fff" stroke="#555" stroke-width="0.7"/>
+  <path d="M138,204 V209 H143" fill="none" stroke="#555" stroke-width="0.7"/>
+  <text x="81" y="213.2" font-size="6.2" text-anchor="middle" fill="#1a1a1a"><tspan font-family="Consolas, 'Courier New', monospace">build_manifest.yaml</tspan><tspan fill="#555"> · build config</tspan></text>
+
+  <!-- ===== 4 Orchestrator ===== -->
+  <rect x="6" y="228" width="150" height="72" rx="3" fill="#F9DDCB" stroke="#D55E00" stroke-width="0.9"/>
+  <circle cx="17" cy="240" r="6" fill="#D55E00"/>
+  <text x="17" y="242.5" font-size="7" font-weight="bold" fill="#fff" text-anchor="middle">4</text>
+  <text x="27" y="242.6" font-size="8" font-weight="bold" fill="#1a1a1a">Orchestrator</text>
+  <text x="150" y="242.6" font-size="6" fill="#444" text-anchor="end" font-family="Consolas, 'Courier New', monospace">orchestrator.py</text>
+  <text x="14" y="254" font-size="6.5" fill="#1a1a1a">Builds every app in an isolated Docker</text>
+  <text x="14" y="262.5" font-size="6.5" fill="#1a1a1a">container, one image per toolchain version</text>
+  <g stroke="#D55E00" stroke-width="0.7" fill="#fff">
+    <rect x="14" y="267" width="42" height="13" rx="2"/>
+    <rect x="59" y="267" width="42" height="13" rx="2"/>
+    <rect x="104" y="267" width="44" height="13" rx="2"/>
+  </g>
+  <g font-size="6.2" fill="#1a1a1a" text-anchor="middle">
+    <text x="35" y="275.8">Debug</text>
+    <text x="80" y="275.8">Release (R8)</text>
+    <text x="126" y="275.8">Obfuscated</text>
+  </g>
+  <path d="M21.2,290 A3.2,3.2 0 1 1 18,286.8" fill="none" stroke="#D55E00" stroke-width="0.8" marker-end="url(#ahV)"/>
+  <text x="25" y="292.3" font-size="6.2" fill="#1a1a1a">On failure: retry with newer toolchain</text>
+
+  <!-- artifact: output/ -->
+  <path d="M19,310 H138 L143,315 V324 H19 Z" fill="#fff" stroke="#555" stroke-width="0.7"/>
+  <path d="M138,310 V315 H143" fill="none" stroke="#555" stroke-width="0.7"/>
+  <text x="81" y="319.2" font-size="6.2" text-anchor="middle" fill="#1a1a1a"><tspan font-family="Consolas, 'Courier New', monospace">output/</tspan><tspan fill="#555"> · APKs, lock files, logs</tspan></text>
+
+  <!-- downstream: TPL analysis -->
+  <rect x="6" y="334" width="150" height="18" rx="3" fill="#F3E6EF" stroke="#A8508A" stroke-width="0.9" stroke-dasharray="3 2"/>
+  <text x="14" y="345.6" font-size="7" font-weight="bold" fill="#1a1a1a">TPL analysis</text>
+  <text x="150" y="345.6" font-size="6" fill="#444" text-anchor="end" font-family="Consolas, 'Courier New', monospace">analyze_tpls.py</text>
+
+  <!-- ===== external services ===== -->
+  <g fill="#EDEDED" stroke="#7A7A7A" stroke-width="0.7">
+    <rect x="176" y="12" width="70" height="28" rx="2"/>
+    <rect x="176" y="86" width="70" height="28" rx="2"/>
+    <rect x="176" y="232" width="70" height="22" rx="2"/>
+    <rect x="176" y="260" width="70" height="36" rx="2"/>
+  </g>
+  <g text-anchor="middle" fill="#1a1a1a">
+    <text x="211" y="23.5" font-size="7" font-weight="bold">GitHub</text>
+    <text x="211" y="32.5" font-size="6.2">Search API</text>
+    <text x="211" y="97.5" font-size="7" font-weight="bold">GitHub</text>
+    <text x="211" y="106.5" font-size="6.2">ZIP archives</text>
+    <text x="211" y="241" font-size="7" font-weight="bold">Docker</text>
+    <text x="211" y="249.5" font-size="6">SDK / JDK images</text>
+    <text x="211" y="270" font-size="6.2" font-weight="bold">Package registries</text>
+    <text x="211" y="279" font-size="6">Maven · Google Maven</text>
+    <text x="211" y="288" font-size="6">npm · pub.dev · NuGet</text>
+  </g>
+  <g stroke="#333" stroke-width="0.8">
+    <line x1="158" y1="26" x2="174" y2="26" marker-start="url(#ah)" marker-end="url(#ah)"/>
+    <line x1="176" y1="100" x2="157" y2="100" marker-end="url(#ah)"/>
+    <line x1="176" y1="243" x2="157" y2="243" marker-end="url(#ah)"/>
+    <line x1="176" y1="278" x2="157" y2="278" marker-end="url(#ah)"/>
+  </g>
+
+  <!-- ===== legend ===== -->
+  <g stroke-width="0.6">
+    <rect x="6" y="360" width="2.5" height="7" fill="#0072B2" stroke="none"/>
+    <rect x="8.5" y="360" width="2.5" height="7" fill="#C98500" stroke="none"/>
+    <rect x="11" y="360" width="2.5" height="7" fill="#009E73" stroke="none"/>
+    <rect x="13.5" y="360" width="2.5" height="7" fill="#D55E00" stroke="none"/>
+    <path d="M50,360 H57.5 L60,362.5 V367 H50 Z" fill="#fff" stroke="#555"/>
+    <rect x="112" y="360" width="10" height="7" fill="#EDEDED" stroke="#7A7A7A"/>
+    <rect x="184" y="360" width="10" height="7" fill="#F3E6EF" stroke="#A8508A" stroke-dasharray="2 1"/>
+  </g>
+  <g font-size="6.2" fill="#1a1a1a">
+    <text x="19" y="366.3">Module</text>
+    <text x="63" y="366.3">Data artifact</text>
+    <text x="125" y="366.3">External service</text>
+    <text x="197" y="366.3">Downstream</text>
+  </g>
+  <text x="6" y="378.5" font-size="5.8" font-style="italic" fill="#555">The pipeline is run separately for Flutter, React Native, Cordova and MAUI.</text>
+</svg>

@@ -21,15 +21,9 @@ Obfuscation and minification can considerably extend the compile time of an Andr
 
 The --[no-]shrink flag has no effect. Code shrinking is always enabled in release builds. To learn more, check out Shrink, obfuscate, and optimize your app.
 
-# Data
-970 repos deemed buildable (not all got downloaded)
-Generated 865 build entries.
-3719 apks
-436 folders with an apk
-71 do not have obfuscated results
-
 # prod 
-Saved 1752 entries to repos.json
-Collected 1663 buildable repos
-downloaded: 1662 repos
-analyzed: Generated 1522 build entries.
+Saved 1768 entries to repos.json
+Collected 1677 buildable repos
+downloaded 1673 repos
+Generated 1532 build entries.
+done so far: 800
