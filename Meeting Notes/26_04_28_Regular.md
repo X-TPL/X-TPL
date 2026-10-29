@@ -1,5 +1,0 @@
-- Präsentation für Seminar nur Related work
-- Related work ca. 2-3 Seiten
-- Insgesamt Arbeit idR 20-40 Seiten
-- Ideen für die Arbeit auf der Webseite des Instituts, generell sind Arbeiten mit PDF gut bewertet worden.
-- Auf Overleaf gibt es ein Template, muss aber nicht verwendet werden.
