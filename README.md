@@ -1,4 +1,4 @@
-# BachelorsThesis Pipeline
+# X-TPL Build Pipeline
 
 This pipeline collects open-source Android apps from GitHub, builds them using Docker, and analyzes their third-party library (TPL) dependencies. It covers four frameworks: **Flutter**, **React Native**, **Cordova**, and **MAUI**.
 
